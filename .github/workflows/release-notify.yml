@@ -14,9 +14,9 @@ jobs:
       # electron-builder тоже правит релиз при заливке exe и blockmap, и это
       # тоже событие edited. Поэтому шлём в Discord не на любой edited, а
       # только когда body реально содержит наш changelog (наш скрипт всегда
-      # начинает body с "# PFC Launcher").
+      # начинает body с "# FCore Launcher").
       - name: Send changelog
-        if: startsWith(github.event.release.body, '# PFC Launcher')
+        if: startsWith(github.event.release.body, '# FCore Launcher')
         env:
           CHANGELOG_WEBHOOK: ${{ secrets.DISCORD_CHANGELOG_WEBHOOK }}
           RELEASE_BODY: ${{ github.event.release.body }}
@@ -25,14 +25,14 @@ jobs:
           RELEASE_PUBLISHED_AT: ${{ github.event.release.published_at }}
         run: |
           BODY=$(jq -Rs . <<< "$RELEASE_BODY")
-          BANNER="https://raw.githubusercontent.com/MRBOMBOCLATTT/PFC-Launcher/main/.github/assets/banner.png"
+          BANNER="https://raw.githubusercontent.com/MRBOMBOCLATTT/FCore-Launcher/main/.github/assets/banner.png"
           jq -n \
-            --arg title "🚀 PFC Launcher — $RELEASE_TITLE" \
+            --arg title "🚀 FCore Launcher — $RELEASE_TITLE" \
             --arg url "$RELEASE_URL" \
             --argjson description "$BODY" \
             --arg banner "$BANNER" \
             --arg timestamp "$RELEASE_PUBLISHED_AT" \
-            '{embeds: [{title: $title, url: $url, description: $description, color: 5763719, image: {url: $banner}, footer: {text: "PFC Launcher Updates"}, timestamp: $timestamp}]}' \
+            '{embeds: [{title: $title, url: $url, description: $description, color: 5763719, image: {url: $banner}, footer: {text: "FCore Launcher Updates"}, timestamp: $timestamp}]}' \
             | curl -s -H "Content-Type: application/json" -X POST "$CHANGELOG_WEBHOOK" -d @-
       - name: Resolve download url
         id: asset
@@ -52,12 +52,12 @@ jobs:
         run: |
           DOWNLOAD_URL="${{ steps.asset.outputs.url }}"
           STATE_FILE=".github/discord-download-message-id.txt"
-          BANNER="https://raw.githubusercontent.com/MRBOMBOCLATTT/PFC-Launcher/main/.github/assets/banner.png"
+          BANNER="https://raw.githubusercontent.com/MRBOMBOCLATTT/FCore-Launcher/main/.github/assets/banner.png"
           DESC=$(printf 'Актуальная версия: **%s**\n[Скачать](%s)' "$RELEASE_TAG" "$DOWNLOAD_URL")
           PAYLOAD=$(jq -n \
             --arg desc "$DESC" \
             --arg banner "$BANNER" \
-            '{embeds: [{title: "📥 Скачать PFC Launcher", description: $desc, color: 5793266, image: {url: $banner}, footer: {text: "Ссылка обновляется автоматически"}}]}')
+            '{embeds: [{title: "📥 Скачать FCore Launcher", description: $desc, color: 5793266, image: {url: $banner}, footer: {text: "Ссылка обновляется автоматически"}}]}')
           if [ -f "$STATE_FILE" ]; then
             MSG_ID=$(cat "$STATE_FILE")
             STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Content-Type: application/json" -X PATCH "$DOWNLOAD_WEBHOOK/messages/$MSG_ID" -d "$PAYLOAD")
