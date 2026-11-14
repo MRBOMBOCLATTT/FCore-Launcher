@@ -26,7 +26,7 @@
 
 ---
 
-![Главный экран FCore Launcher](assets/screenshots/home-ru.jpg)
+![Главный экран FCore Launcher](.github/assets/screenshots/home-ru.jpg)
 
 ## Что такое FCore Launcher?
 
@@ -40,7 +40,7 @@
 
 | Сборки | Контент |
 | --- | --- |
-| ![Сборки](assets/screenshots/builds-ru.jpg) | ![Моды](assets/screenshots/content-ru.jpg) |
+| ![Сборки](.github/assets/screenshots/builds-ru.jpg) | ![Моды](.github/assets/screenshots/content-ru.jpg) |
 
 ## Возможности
 
