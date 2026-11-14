@@ -26,7 +26,7 @@
 
 ---
 
-![FCore Launcher home screen](assets/screenshots/home-en.jpg)
+![FCore Launcher home screen](.github/assets/screenshots/home-en.jpg)
 
 ## What is FCore Launcher?
 
@@ -40,7 +40,7 @@ The interface is available in **English and Russian**.
 
 | Builds | Content |
 | --- | --- |
-| ![Builds](assets/screenshots/builds-en.jpg) | ![Mods](assets/screenshots/content-en.jpg) |
+| ![Builds](.github/assets/screenshots/builds-en.jpg) | ![Mods](.github/assets/screenshots/content-en.jpg) |
 
 ## Features
 
