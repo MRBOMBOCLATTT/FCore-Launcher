@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob: file:; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data: file:; img-src 'self' data: blob: file: https: http://ely.by http://textures.minecraft.net; media-src 'self' data: blob: file:; connect-src 'self' data: blob: file: https:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>FCore Launcher</title>
+  <link rel="stylesheet" href="fonts.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="redesign.css">
+  <link rel="stylesheet" href="gradient.css">
+  <link rel="stylesheet" href="diagnostics.css">
+  <link rel="stylesheet" href="builds.css">
+  <link rel="stylesheet" href="appearance.css">
+</head>
+<body>
+  <div id="fcBgLayer" aria-hidden="true"></div>
+  <div class="titlebar" id="titlebar">
+    <div class="titlebar-drag"></div>
+    <div class="titlebar-controls">
+      <button id="titlebarSettingsBtn" class="titlebar-btn" title="Настройки" aria-label="Настройки"><img src="icons/settings.svg" alt=""></button>
+      <span class="titlebar-sep" aria-hidden="true"></span>
+      <button id="winMinBtn" class="titlebar-btn" title="Свернуть" aria-label="Свернуть"><img src="icons/minus.svg" alt=""></button>
+      <button id="winMaxBtn" class="titlebar-btn" title="Развернуть" aria-label="Развернуть"><img id="winMaxIcon" src="icons/maximize.svg" alt=""></button>
+      <button id="winCloseBtn" class="titlebar-btn titlebar-close" title="Закрыть" aria-label="Закрыть"><img src="icons/x.svg" alt=""></button>
+    </div>
+  </div>
+  <div id="splash">
+    <div class="splash-cube"><i></i><i></i><i></i></div>
+    <div class="splash-text">FCore Launcher</div>
+    <div class="splash-hint" id="splashHint">Загрузка...</div>
+  </div>
+
+  <div id="toastContainer"></div>
+
+  <div id="globalSearchModal" class="global-search-modal" style="display:none">
+    <div class="global-search-box" role="dialog" aria-modal="true" aria-label="Глобальный поиск">
+      <div class="global-search-head"><span>Глобальный поиск</span><kbd>ESC</kbd></div>
+      <input id="globalSearchInput" autocomplete="off" placeholder="Сборки, моды, настройки или страницы...">
+      <div id="globalSearchResults" class="global-search-results"></div>
+      <div class="global-search-hint">Enter — открыть результат · Ctrl + K — открыть поиск</div>
+    </div>
+  </div>
+
+  <div id="updateMiniWidget" class="update-mini-widget" style="display:none">
+    <div class="update-mini-top">
+      <span id="updateMiniLabel">Загрузка обновления...</span>
+      <span id="updateMiniPercent">0%</span>
+    </div>
+    <div class="update-mini-track"><div id="updateMiniFill" class="update-mini-fill"></div></div>
+  </div>
+
+  <div class="app-body">
+  <aside class="sidebar">
+    <div class="logo" id="logo">
+      <img id="logoImg" src="../build/icon.png" alt="">
+      <span class="logo-text"><strong>FCore Launcher</strong><em id="sidebarVersion"></em></span>
+    </div>
+    <nav aria-label="Разделы">
+      <button class="tab-btn active" data-tab="play" title="Главная"><span class="ico nav-icon" style="--ico-src:url('icons/home.svg')" aria-hidden="true"></span><span class="nav-label">Главная</span></button>
+      <button class="tab-btn" data-tab="builds" title="Сборки"><span class="ico nav-icon" style="--ico-src:url('icons/box.svg')" aria-hidden="true"></span><span class="nav-label">Сборки</span></button>
+      <button class="tab-btn" data-tab="content" title="Моды, ресурспаки и шейдеры"><span class="ico nav-icon" style="--ico-src:url('icons/mods.svg')" aria-hidden="true"></span><span class="nav-label">Контент</span><span id="contentUpdateBadge" class="badge" style="display:none"></span></button>
+      <button class="tab-btn" data-tab="worlds" title="Миры"><span class="ico nav-icon" style="--ico-src:url('icons/worlds.svg')" aria-hidden="true"></span><span class="nav-label">Миры</span></button>
+      <button class="tab-btn" data-tab="downloads" title="Загрузки"><span class="ico nav-icon" style="--ico-src:url('icons/download.svg')" aria-hidden="true"></span><span class="nav-label">Загрузки</span><span id="downloadsBadge" class="badge" style="display:none"></span></button>
+      <button class="tab-btn" data-tab="screenshots" title="Скриншоты"><span class="ico nav-icon" style="--ico-src:url('icons/screenshots.svg')" aria-hidden="true"></span><span class="nav-label">Скриншоты</span></button>
+      <button class="tab-btn" data-tab="activity" title="Игровая активность"><span class="ico nav-icon" style="--ico-src:url('icons/activity.svg')" aria-hidden="true"></span><span class="nav-label">Активность</span></button>
+      <button class="tab-btn" data-tab="appearance" title="Оформление"><span class="ico nav-icon" style="--ico-src:url('icons/palette.svg')" aria-hidden="true"></span><span class="nav-label">Оформление</span></button>
+      <button class="tab-btn" data-tab="settings" title="Настройки"><span class="ico nav-icon" style="--ico-src:url('icons/settings.svg')" aria-hidden="true"></span><span class="nav-label">Настройки</span></button>
+      <button class="tab-btn" data-tab="changelog" title="История"><span class="ico nav-icon" style="--ico-src:url('icons/updatelog.svg')" aria-hidden="true"></span><span class="nav-label">История</span></button>
+    </nav>
+    <button id="discordBtn" class="discord-btn" title="Присоединиться к серверу Press F Community">
+      <img src="discord-icon.png" alt="">
+      <span>Наш Discord</span>
+    </button>
+    <div class="account-box">
+      <div class="eyebrow">Аккаунт</div>
+      <div class="account-row" id="accountRow">
+        <canvas id="skinPreview" width="64" height="64"></canvas>
+        <div id="accountName">Не авторизован</div>
+      </div>
+      <button id="addAccountBtn"><img class="btn-ico" src="icons/users.svg" alt="">Аккаунты</button>
+      <button id="secretBtn" style="display:none">Бесплатные фурри подарок</button>
+    </div>
+    <div id="accountsModal" class="accounts-page" style="display:none">
+      <div class="accounts-page-inner" role="dialog" aria-labelledby="accountsTitle">
+        <div class="accounts-page-header">
+          <div>
+            <h2 id="accountsTitle">Аккаунты</h2>
+            <div class="accounts-page-sub">Выбери аккаунт, под которым запускается игра.</div>
+          </div>
+          <button id="closeAccountChooserBtn" class="accounts-page-close" title="Закрыть">×</button>
+        </div>
+
+        <div id="accountsList" class="accounts-list"></div>
+
+        <div class="accounts-section-title">Добавить аккаунт</div>
+        <div class="accounts-add-methods">
+          <button id="chooseMicrosoftBtn" class="account-method-card">
+            <img src="icons/microsoft.png" alt="">
+            <span class="method-text"><strong>Microsoft</strong><small>Лицензия, скин меняется в лаунчере</small></span>
+          </button>
+          <button id="chooseElybyBtn" class="account-method-card">
+            <img src="icons/elyby.png" alt="">
+            <span class="method-text"><strong>Ely.by</strong><small>Для серверов со своей авторизацией</small></span>
+          </button>
+          <button id="chooseOfflineBtn" class="account-method-card">
+            <img src="icons/offline.png" alt="">
+            <span class="method-text"><strong>Офлайн-ник</strong><small>Только никнейм, без входа</small></span>
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="loginModal" class="ely-modal" style="display:none">
+      <div class="ely-box" role="dialog" aria-labelledby="loginTitle">
+        <h3 id="loginTitle">Введите никнейм</h3>
+        <p class="ely-text">Офлайн-аккаунт без авторизации. Ник можно будет сменить, добавив новый аккаунт.</p>
+        <input type="text" id="usernameInput" class="ely-input" placeholder="Никнейм..." autocomplete="off">
+        <button id="submitUsername" class="primary">Войти</button>
+      </div>
+    </div>
+    <div id="elybyLoginModal" class="ely-modal" style="display:none">
+      <div class="ely-box" role="dialog" aria-labelledby="elyTitle">
+        <img class="ely-logo" src="icons/elyby.png" alt="">
+        <h3 id="elyTitle">Вход через Ely.by</h3>
+        <p class="ely-text">Страница ely.by открылась в браузере. Если этого не произошло, перейди по ссылке и введи код.</p>
+        <a id="elybyVerificationLink" class="ely-link" href="#" target="_blank"></a>
+        <div class="ely-code-row">
+          <span id="elybyUserCode" class="ely-code"></span>
+          <button id="elybyCopyCodeBtn" class="primary" title="Скопировать код">Копировать</button>
+        </div>
+        <div class="ely-status"><span class="ely-spinner" aria-hidden="true"></span><span id="elybyLoginStatus">Ожидаю подтверждения на сайте...</span></div>
+        <button id="elybyCancelLoginBtn" class="secondary">Отмена</button>
+      </div>
+    </div>
+    <div id="textPromptModal" class="text-prompt-modal" style="display:none">
+      <div class="text-prompt-box">
+        <h3 id="textPromptTitle">Введите значение</h3>
+        <input type="text" id="textPromptInput" placeholder="">
+        <div class="text-prompt-actions">
+          <button id="textPromptCancel" class="secondary">Отмена</button>
+          <button id="textPromptOk" class="primary">Готово</button>
+        </div>
+      </div>
+    </div>
+    <div id="updateReadyModal" class="text-prompt-modal" style="display:none">
+      <div class="text-prompt-box update-ready-box">
+        <h3>Обновление готово</h3>
+        <p id="updateReadyText" class="update-ready-text"></p>
+        <div class="text-prompt-actions">
+          <button id="updateReadyLater" class="secondary">Позже</button>
+          <button id="updateReadyInstall" class="primary">Перезапустить</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="versionPickerModal" class="text-prompt-modal" style="display:none">
+      <div class="text-prompt-box version-picker-box">
+        <h3 id="versionPickerTitle">Выбор версии</h3>
+        <div id="versionPickerList" class="version-picker-list"></div>
+        <div class="text-prompt-actions">
+          <button id="versionPickerCancel" class="secondary">Закрыть</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="importModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+  <div style="background:#222; padding:20px; border-radius:5px; color:white; min-width:320px;">
+    <h3>Импорт сборки</h3>
+    <div class="row" style="margin-bottom:10px">
+      <button id="importFromFileBtn">Из файла (.zip)</button>
+    </div>
+    <div class="row">
+      <input type="text" id="importUrlInput" placeholder="Прямая ссылка на .zip" style="width:100%">
+      <button id="importFromUrlBtn">Скачать и импортировать</button>
+    </div>
+    <button id="closeImportModalBtn">Закрыть</button>
+  </div>
+</div>
+
+    <div id="buildCheckModal" class="text-prompt-modal whatsnew-overlay" style="display:none">
+      <div class="whatsnew-box bc-box" role="dialog" aria-modal="true" aria-labelledby="bcTitle">
+        <div class="whatsnew-glow" aria-hidden="true"></div>
+        <div class="whatsnew-head">
+          <div class="whatsnew-eyebrow">Проверка сборки</div>
+          <div class="whatsnew-title-row">
+            <h3 id="bcTitle">Нужно внимание</h3>
+            <span class="whatsnew-version" id="bcBadge"></span>
+          </div>
+        </div>
+        <div id="bcBody" class="whatsnew-body"></div>
+        <div id="bcStatus" class="bc-status"></div>
+        <div class="bc-foot">
+          <button id="bcCancelBtn" class="secondary">Отмена</button>
+          <button id="bcFixBtn" class="secondary">Скачать недостающие</button>
+          <button id="bcLaunchBtn" class="primary">Всё равно запустить</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="whatsNewModal" class="text-prompt-modal whatsnew-overlay" style="display:none">
+      <div class="whatsnew-box" role="dialog" aria-modal="true" aria-labelledby="whatsNewTitle">
+        <div class="whatsnew-glow" aria-hidden="true"></div>
+        <div class="whatsnew-head">
+          <div class="whatsnew-eyebrow">Обновление</div>
+          <div class="whatsnew-title-row">
+            <h3 id="whatsNewTitle">Что нового</h3>
+            <span class="whatsnew-version" id="whatsNewVersion"></span>
+          </div>
+        </div>
+        <div id="whatsNewBody" class="whatsnew-body"></div>
+        <div class="whatsnew-foot">
+          <button id="closeWhatsNewBtn" class="primary">Понятно</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main>
+
+    <div id="launchProgressOverlay" class="launch-progress-overlay">
+      <div class="launch-progress-card"><div class="launch-progress-brand">FCORE <span>LAUNCHER</span></div><div class="launch-progress-title">Запуск Minecraft</div><div class="launch-progress-status" id="launchProgressStatus">Подготовка запуска...</div><div class="launch-progress-count" id="launchProgressCount">Подготовка файлов</div><div class="launch-progress-percent" id="launchProgressPercent">0%</div></div>
+      <div class="launch-progress-bar"><div class="launch-progress-bar-fill" id="launchProgressBarFill"></div></div>
+      <div class="launch-progress-icon"><i></i><i></i><i></i></div>
+    </div>
+    <section id="tab-play" class="tab active">
+      <div class="home">
+        <div id="instanceDropOverlay" class="mods-drop-overlay">
+          <div class="mods-drop-overlay-text">Отпусти .zip сборки, чтобы установить моды/ресурспаки из неё целиком</div>
+        </div>
+        <div class="home-main">
+
+          <div class="home-banner" id="playHero">
+            <div class="home-banner-bg" id="playHeroBg"></div>
+            <div class="home-banner-shade"></div>
+            <input id="backgroundFileInput" type="file" accept="image/png,image/jpeg,image/webp" style="display:none">
+            <div class="home-banner-text">
+              <h1>Добро пожаловать!</h1>
+              <p>Запускай Minecraft с любимыми модами</p>
+            </div>
+          </div>
+
+          <section class="card build-card" aria-label="Выбранная сборка">
+            <div class="build-top">
+              <div class="build-thumb" id="buildThumb"><span class="ico build-thumb-ph" style="--ico-src:url('icons/box.svg')" aria-hidden="true"></span></div>
+              <div class="build-info">
+                <div class="caps">Выбранная сборка</div>
+                <div class="build-title-row">
+                  <h2 class="build-title" id="heroBuildTitle">Minecraft</h2>
+                  <button id="favVersionBtn" class="star-btn" title="Сделать любимой версией" aria-label="Сделать любимой версией"><span class="mask-ico" style="--ico-src:url('icons/star.svg')"></span></button>
+                </div>
+                <div class="build-controls">
+                  <select id="versionSelect" class="pill-select" aria-label="Версия Minecraft"></select>
+                  <div class="loader-row" id="loaderRow" role="group" aria-label="Загрузчик модов">
+                    <button type="button" class="loader-btn" data-loader="fabric">Fabric</button>
+                    <button type="button" class="loader-btn" data-loader="forge">Forge</button>
+                    <button type="button" class="loader-btn" data-loader="neoforge">NeoForge</button>
+                    <button type="button" class="loader-btn" data-loader="vanilla">Vanilla</button>
+                  </div>
+                  <select id="loaderSelect" style="display:none" aria-hidden="true" tabindex="-1">
+                    <option value="fabric">Fabric</option>
+                    <option value="forge">Forge</option>
+                    <option value="neoforge">NeoForge</option>
+                    <option value="vanilla">Vanilla</option>
+                  </select>
+                  <span class="chip" id="modCountChip">Моды: —</span>
+                </div>
+                <div class="build-desc" id="heroBuildSubtitle"></div>
+                <div class="build-desc" id="playtimeLabel"></div>
+              </div>
+              <div class="pop-wrap">
+                <button type="button" id="buildMoreBtn" class="icon-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="buildMoreMenu" title="Действия со сборкой" aria-label="Действия со сборкой"><span class="ico" style="--ico-src:url('icons/ellipsis.svg')" aria-hidden="true"></span></button>
+                <div class="pop" id="buildMoreMenu" role="menu" hidden>
+                  <button type="button" role="menuitem" class="pop-item" id="changeBackgroundBtn">Сменить фон</button>
+                  <button type="button" role="menuitem" class="pop-item" id="resetBackgroundBtn">Сбросить фон</button>
+                  <button type="button" role="menuitem" class="pop-item" id="buildColorBtn">Цвет сборки…</button>
+                  <button type="button" role="menuitem" class="pop-item" data-proxy="openGameFolderBtn">Папка сборки</button>
+                  <button type="button" role="menuitem" class="pop-item" data-proxy="openModsFolderBtn">Папка модов</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="launch">
+              <button id="playBtn" class="primary launch-main" type="button">
+                <span class="ico launch-ico" style="--ico-src:url('icons/play-fill.svg')" aria-hidden="true"></span>
+                <span id="playBtnLabel">Запустить Minecraft</span>
+              </button>
+              <div class="pop-wrap launch-more-wrap">
+                <button type="button" id="playMenuBtn" class="launch-more" aria-haspopup="menu" aria-expanded="false" aria-controls="playMenu" title="Другие действия" aria-label="Другие действия при запуске"><span class="ico" style="--ico-src:url('icons/chevron-down.svg')" aria-hidden="true"></span></button>
+                <div class="pop pop-up" id="playMenu" role="menu" hidden>
+                  <button type="button" role="menuitem" class="pop-item" data-proxy="verifyFilesBtn">Проверить файлы</button>
+                  <button type="button" role="menuitem" class="pop-item" data-proxy="verifyAndFixBtn">Проверить и исправить</button>
+                  <button type="button" role="menuitem" class="pop-item" data-proxy="openLogsFolderBtn">Папка логов</button>
+                  <button type="button" role="menuitem" class="pop-item" data-proxy="copyPlayLogBtn">Скопировать лог</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="status" id="homeStatus">
+              <div class="stat-tile" id="tileJava">
+                <span class="ico tile-ico" style="--ico-src:url('icons/coffee.svg')" aria-hidden="true"></span>
+                <div class="tile-body"><div class="tile-label" id="javaLabel">Java</div><div class="tile-value" id="javaValue">Проверяю…</div></div>
+              </div>
+              <div class="stat-tile" id="tileRam">
+                <span class="ico tile-ico" style="--ico-src:url('icons/cpu.svg')" aria-hidden="true"></span>
+                <div class="tile-body"><div class="tile-label">ОЗУ</div><div class="tile-value" id="ramValue">—</div><div class="meter"><i id="ramBar"></i></div></div>
+              </div>
+              <div class="stat-tile" id="tileDisk">
+                <span class="ico tile-ico" style="--ico-src:url('icons/hard-drive.svg')" aria-hidden="true"></span>
+                <div class="tile-body"><div class="tile-label">Место на диске</div><div class="tile-value" id="diskValue">—</div><div class="meter"><i id="diskBar"></i></div></div>
+              </div>
+              <button type="button" class="stat-tile stat-tile-btn" id="tileCheck" title="Проверить файлы выбранной сборки">
+                <span class="ico tile-ico tile-ico-state" style="--ico-src:url('icons/circle-check.svg')" aria-hidden="true"></span>
+                <div class="tile-body"><div class="tile-label">Проверка сборки</div><div class="tile-value" id="checkValue">Не проверялась</div></div>
+              </button>
+            </div>
+          </section>
+
+          <section class="card recent" aria-label="Недавние сборки">
+            <div class="card-head">
+              <h2>Недавние сборки</h2>
+              <button type="button" id="recentAllBtn" class="link-btn">Все сборки <span class="ico" style="--ico-src:url('icons/arrow-right.svg')" aria-hidden="true"></span></button>
+            </div>
+            <div class="recent-grid" id="recentGrid"></div>
+          </section>
+
+          <section class="card stats" id="playStatsPanel" aria-label="Статистика">
+            <div class="card-head"><h2>Твоя статистика</h2><span class="card-note">По выбранной версии</span></div>
+            <div class="stats-grid">
+              <div class="stat"><span>Всего запусков</span><strong id="statsTotalLaunches">0</strong></div>
+              <div class="stat"><span>Запусков этой версии</span><strong id="statsInstanceLaunches">0</strong></div>
+              <div class="stat"><span>Время в игре</span><strong id="statsInstancePlaytime">—</strong></div>
+            </div>
+          </section>
+
+      <details class="tool-card">
+        <summary>
+          <span class="tool-ico"><span class="ico" style="--ico-src:url('icons/folder.svg')" aria-hidden="true"></span></span>
+          <span class="tool-head"><span class="tool-title">Папки и инструменты</span><span class="tool-sub">Открыть папки, обмен сборками и проверка файлов</span></span>
+          <span class="tool-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="tool-body">
+          <div>
+            <div class="tool-group-title">Папки</div>
+            <div class="tool-grid">
+              <button id="openGameFolderBtn">Папка сборки</button>
+              <button id="openModsFolderBtn">Папка модов</button>
+              <button id="openScreenshotsBtn">Скриншоты</button>
+              <button id="openLogsFolderBtn">Папка логов</button>
+              <button id="openRootFolderBtn">Папка .minecraft</button>
+              <button id="openAuthlibLogBtn">Лог authlib-injector</button>
+            </div>
+          </div>
+          <div>
+            <div class="tool-group-title">Обмен сборками</div>
+            <div class="tool-grid">
+              <button id="exportModsBtn">Скинуть моды другу (zip)</button>
+              <button id="importInstanceBtn">Импортировать сборку</button>
+              <button id="exportMrpackBtn">Экспорт в .mrpack</button>
+              <button id="importMrpackBtn">Импорт .mrpack</button>
+              <button id="importCurseforgeBtn">Импорт модпака CurseForge (.zip)</button>
+            </div>
+          </div>
+          <div>
+            <div class="tool-group-title">Проверка</div>
+            <div class="tool-grid">
+              <button id="verifyFilesBtn">Проверить файлы</button>
+              <button id="verifyAndFixBtn">Проверить и исправить</button>
+            </div>
+          </div>
+        </div>
+      </details>
+      <details class="tool-card" id="launchSettingsSection">
+        <summary>
+          <span class="tool-ico"><span class="ico" style="--ico-src:url('icons/cpu.svg')" aria-hidden="true"></span></span>
+          <span class="tool-head"><span class="tool-title">Настройки запуска</span><span class="tool-sub" id="launchSettingsSub">Память, аргументы, Java и команды</span></span>
+          <span class="tool-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="tool-body ls-body">
+          <p class="tool-desc" id="lsScope">Действуют только для выбранной сборки. Всё, что не задано здесь, берётся из общих настроек.</p>
+          <div class="ls-grid">
+            <label class="build-field">Память
+              <select id="lsMemoryMode">
+                <option value="global">Как в общих настройках</option>
+                <option value="auto">Подобрать автоматически</option>
+                <option value="custom">Задать вручную</option>
+              </select>
+            </label>
+            <div class="ls-custom" id="lsCustomRow">
+              <label class="build-field">Минимум
+                <input type="text" id="lsMemoryMin" placeholder="1G" autocomplete="off" spellcheck="false">
+              </label>
+              <label class="build-field">Максимум
+                <input type="text" id="lsMemoryMax" placeholder="4G" autocomplete="off" spellcheck="false">
+              </label>
+            </div>
+          </div>
+          <div class="ls-reco" id="lsReco"></div>
+          <label class="check ls-check">
+            <input type="checkbox" id="lsGc">
+            Тюнинг сборки мусора (G1) для меньших подлагиваний
+          </label>
+          <label class="build-field">Дополнительные JVM-аргументы
+            <input type="text" id="lsJvmArgs" placeholder="Добавятся к общим аргументам" autocomplete="off" spellcheck="false">
+          </label>
+          <div class="build-field">Java
+            <div class="tool-form">
+              <input type="text" id="lsJavaPath" placeholder="Как в общих настройках" autocomplete="off" spellcheck="false">
+              <button type="button" id="lsPickJava" class="secondary">Выбрать</button>
+            </div>
+          </div>
+          <label class="build-field">Переменные окружения
+            <textarea id="lsEnv" rows="3" placeholder="NAME=значение, по одной на строке" spellcheck="false"></textarea>
+          </label>
+          <label class="build-field">Команда перед запуском
+            <input type="text" id="lsPreCommand" placeholder="Выполнится до старта игры" autocomplete="off" spellcheck="false">
+          </label>
+          <label class="build-field">Команда после выхода
+            <input type="text" id="lsPostCommand" placeholder="Выполнится после закрытия игры" autocomplete="off" spellcheck="false">
+          </label>
+          <div class="tool-form">
+            <button type="button" id="lsSave" class="primary">Сохранить</button>
+            <button type="button" id="lsReset" class="secondary">Сбросить</button>
+          </div>
+          <div class="tool-group-title">Пресеты игры</div>
+          <p class="tool-desc">Сохрани набор настроек запуска и применяй его к любой сборке.</p>
+          <div class="tool-form">
+            <select id="gamePresetSelect"><option value="">Выбери пресет</option></select>
+            <button type="button" id="gamePresetApply" class="primary">Применить</button>
+            <button type="button" id="gamePresetDelete" class="secondary">Удалить</button>
+          </div>
+          <div class="tool-form">
+            <button type="button" id="gamePresetSave" class="secondary">Сохранить текущие настройки как пресет</button>
+          </div>
+        </div>
+      </details>
+      <details class="tool-card" id="copySettingsSection">
+        <summary>
+          <span class="tool-ico"><span class="ico" style="--ico-src:url('icons/settings.svg')" aria-hidden="true"></span></span>
+          <span class="tool-head"><span class="tool-title">Скопировать настройки из другой версии</span><span class="tool-sub">Перенести options.txt и config</span></span>
+          <span class="tool-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="tool-body">
+          <p class="tool-desc">Перенесёт звук, графику, управление (options.txt) и настройки модов (папку config) из выбранной версии в текущую. Моды, ресурспаки и миры не трогает.</p>
+          <div class="tool-form">
+            <select id="copySettingsSourceSelect">
+              <option value="">Выбери версию-источник</option>
+            </select>
+            <button id="copySettingsBtn">Скопировать сюда</button>
+          </div>
+        </div>
+      </details>
+      <details class="tool-card" id="fabricLoaderSection">
+        <summary>
+          <span class="tool-ico"><span class="ico" style="--ico-src:url('icons/cpu.svg')" aria-hidden="true"></span></span>
+          <span class="tool-head"><span class="tool-title">Версия Fabric Loader</span><span class="tool-sub">Закрепить версию загрузчика</span></span>
+          <span class="tool-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="tool-body">
+          <p class="tool-desc">По умолчанию лаунчер сам ставит последнюю стабильную версию. Можно закрепить конкретную — например, если какой-то мод ещё не обновился под новый Fabric Loader.</p>
+          <div class="tool-form">
+            <select id="fabricLoaderVersionSelect">
+              <option value="">Автоматически (последняя стабильная)</option>
+            </select>
+            <button id="refreshFabricLoaderVersionsBtn">Обновить список</button>
+            <button id="saveFabricLoaderVersionBtn">Сохранить</button>
+          </div>
+        </div>
+      </details>
+      <details class="tool-card" id="neoforgeVersionSection">
+        <summary>
+          <span class="tool-ico"><span class="ico" style="--ico-src:url('icons/cpu.svg')" aria-hidden="true"></span></span>
+          <span class="tool-head"><span class="tool-title">Версия NeoForge</span><span class="tool-sub">Закрепить версию загрузчика</span></span>
+          <span class="tool-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="tool-body">
+          <p class="tool-desc">По умолчанию лаунчер ставит последнюю стабильную сборку NeoForge под выбранную версию игры. Можно закрепить конкретную — например, если модпак требует определённую.</p>
+          <div class="tool-form">
+            <select id="neoforgeVersionSelect">
+              <option value="">Автоматически (последняя стабильная)</option>
+            </select>
+            <button id="refreshNeoforgeVersionsBtn">Обновить список</button>
+            <button id="saveNeoforgeVersionBtn">Сохранить</button>
+          </div>
+        </div>
+      </details>
+      <details class="tool-card">
+        <summary>
+          <span class="tool-ico"><span class="ico" style="--ico-src:url('icons/users.svg')" aria-hidden="true"></span></span>
+          <span class="tool-head"><span class="tool-title">Сборка сообщества</span><span class="tool-sub">Обновление до официальной сборки PFC</span></span>
+          <span class="tool-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="tool-body">
+          <p class="tool-desc">Ссылка на .zip с официальной сборкой PFC для текущей версии/загрузчика. Задаётся один раз — дальше просто жми "Обновить" при выходе новой версии сборки.</p>
+          <div class="tool-form">
+            <input id="communityBuildUrlInput" placeholder="Прямая ссылка на .zip сборки сообщества">
+            <button id="saveCommunityBuildUrlBtn">Сохранить ссылку</button>
+          </div>
+          <div class="tool-form">
+            <button id="updateCommunityBuildBtn" class="primary">Обновить сборку до последней версии сообщества</button>
+          </div>
+        </div>
+      </details>
+      <details class="tool-card" id="meteorClientSection" style="display:none">
+        <summary>
+          <span class="tool-ico"><span class="ico" style="--ico-src:url('icons/download.svg')" aria-hidden="true"></span></span>
+          <span class="tool-head"><span class="tool-title">Meteor Client</span><span class="tool-sub">Отдельная установка клиента</span></span>
+          <span class="tool-chevron" aria-hidden="true"></span>
+        </summary>
+        <div class="tool-body">
+          <p class="tool-desc">Meteor Client не публикуется на Modrinth, поэтому качается отдельно. Сначала ищем билд под твою версию Minecraft в архиве (meteor-archive), а если там нет — берём последний официальный релиз с GitHub (он подходит только для самой новой версии Minecraft).</p>
+          <div class="tool-form">
+            <span id="meteorClientStatus" class="tool-status">Версия не установлена</span>
+          </div>
+          <div class="tool-form">
+            <button id="checkMeteorClientBtn">Проверить обновление</button>
+            <button id="installMeteorClientBtn" class="primary">Установить/обновить</button>
+          </div>
+          <div class="tool-form" id="meteorClientProgressRow" style="display:none">
+            <label id="meteorClientProgressLabel">Загрузка...</label>
+            <progress id="meteorClientProgressBar" value="0" max="100" style="width:100%"></progress>
+          </div>
+        </div>
+      </details>
+      <div class="row">
+        <button id="copyPlayLogBtn">Скопировать лог</button>
+        <button id="sharePlayLogBtn" title="Загрузить лог на mclo.gs и скопировать ссылку. Токены входа скрываются автоматически">Поделиться логом</button>
+      </div>
+      <div class="console-bar" id="consoleBar">
+        <div class="console-levels" role="group" aria-label="Уровни лога">
+          <button type="button" class="console-chip is-on" data-level="error">Ошибки <b data-count="error">0</b></button>
+          <button type="button" class="console-chip is-on" data-level="warn">Предупреждения <b data-count="warn">0</b></button>
+          <button type="button" class="console-chip is-on" data-level="info">Инфо <b data-count="info">0</b></button>
+          <button type="button" class="console-chip is-on" data-level="debug">Отладка <b data-count="debug">0</b></button>
+        </div>
+        <input type="search" id="consoleSearch" class="console-search" placeholder="Поиск по логу" autocomplete="off" spellcheck="false">
+        <label class="check console-auto">
+          <input type="checkbox" id="consoleAuto" checked>
+          Автопрокрутка
+        </label>
+        <button type="button" id="consoleExpand" class="secondary" title="Увеличить или уменьшить окно лога">Развернуть</button>
+        <button type="button" id="consoleClear" class="secondary">Очистить</button>
+      </div>
+      <pre id="playLog" class="log"></pre>
+      <div class="console-status" id="consoleStatus"></div>
+        </div>
+
+        <aside class="home-side" aria-label="Быстрый доступ">
+          <section class="card side-card">
+            <h2>Быстрые действия</h2>
+            <div class="qa-list">
+              <button type="button" class="qa" id="qaMods"><span class="ico qa-ico" style="--ico-src:url('icons/mods.svg')" aria-hidden="true"></span><span>Управление модами</span><span class="ico qa-arrow" style="--ico-src:url('icons/arrow-right.svg')" aria-hidden="true"></span></button>
+              <button type="button" class="qa" id="qaFolder"><span class="ico qa-ico" style="--ico-src:url('icons/folder.svg')" aria-hidden="true"></span><span>Открыть папку .minecraft</span><span class="ico qa-arrow" style="--ico-src:url('icons/arrow-right.svg')" aria-hidden="true"></span></button>
+              <button type="button" class="qa" id="qaLoader"><span class="ico qa-ico" style="--ico-src:url('icons/box.svg')" aria-hidden="true"></span><span>Версия загрузчика</span><span class="ico qa-arrow" style="--ico-src:url('icons/arrow-right.svg')" aria-hidden="true"></span></button>
+              <button type="button" class="qa" id="qaFix"><span class="ico qa-ico" style="--ico-src:url('icons/wrench.svg')" aria-hidden="true"></span><span>Проверить и исправить</span><span class="ico qa-arrow" style="--ico-src:url('icons/arrow-right.svg')" aria-hidden="true"></span></button>
+            </div>
+          </section>
+
+          <section class="card side-card" aria-live="polite">
+            <h2>Сейчас в игре</h2>
+            <div class="now" id="nowPlaying">
+              <div class="now-ico" aria-hidden="true"><span class="ico" style="--ico-src:url('icons/play-fill.svg')"></span></div>
+              <div class="now-text"><div class="now-title" id="nowTitle">Вы не в игре</div><div class="now-sub" id="nowSub">Запустите Minecraft, чтобы увидеть информацию</div></div>
+            </div>
+          </section>
+
+          <section class="card side-card">
+            <div class="card-head"><h2>Новости</h2><button type="button" id="newsAllBtn" class="link-btn link-btn-sm">Все новости <span class="ico" style="--ico-src:url('icons/arrow-right.svg')" aria-hidden="true"></span></button></div>
+            <div class="news-list" id="newsList"></div>
+            <button type="button" class="site-btn" id="openSiteBtn"><span>Открыть GitHub</span><span class="ico" style="--ico-src:url('icons/external-link.svg')" aria-hidden="true"></span></button>
+          </section>
+        </aside>
+      </div>
+    </section>
+
+    <section id="tab-builds" class="tab">
+      <div class="page">
+        <header class="page-head">
+          <div>
+            <h1>Сборки</h1>
+            <div class="page-note">У каждой сборки свои моды, ресурспаки, шейдеры, миры и настройки.</div>
+          </div>
+          <div class="builds-actions">
+            <button id="buildOptimizeBtn" class="secondary" title="Добавить проверенные моды для FPS и экономии памяти">Оптимизировать</button>
+            <button id="buildImportMrpackBtn" class="secondary">Импорт .mrpack</button>
+            <button id="buildImportLauncherBtn" class="secondary" title="Prism, MultiMC, CurseForge и официальный лаунчер">Импорт из лаунчера</button>
+            <button id="buildImportCodeBtn" class="secondary" title="Вставить код сборки, который прислал друг">Импорт по коду</button>
+            <button id="buildCreateBtn" class="primary">Создать сборку</button>
+          </div>
+        </header>
+        <div class="builds-filter" id="buildsFilter">
+          <input type="search" id="buildsSearch" placeholder="Поиск по названию, версии, тегу" autocomplete="off" spellcheck="false">
+          <div class="builds-groups" id="buildsGroups"></div>
+        </div>
+        <div id="buildsGrid" class="builds-grid"></div>
+      </div>
+    </section>
+
+    <section id="tab-content" class="tab">
+      <div class="content-switch" id="contentSwitch" role="tablist" aria-label="Тип контента">
+        <button type="button" class="content-seg active" data-pane="mods" role="tab"><span class="ico seg-ico" style="--ico-src:url('icons/mods.svg')" aria-hidden="true"></span><span>Моды</span><span id="modsUpdateBadge" class="badge" style="display:none"></span></button>
+        <button type="button" class="content-seg" data-pane="resourcepacks" role="tab"><span class="ico seg-ico" style="--ico-src:url('icons/resourcepacks.svg')" aria-hidden="true"></span><span>Ресурспаки</span><span id="rpUpdateBadge" class="badge" style="display:none"></span></button>
+        <button type="button" class="content-seg" data-pane="shaders" role="tab"><span class="ico seg-ico" style="--ico-src:url('icons/shaders.svg')" aria-hidden="true"></span><span>Шейдеры</span><span id="shUpdateBadge" class="badge" style="display:none"></span></button>
+        <span id="contentBuildChip" class="content-build-chip"></span>
+      </div>
+    <div id="tab-mods" class="content-pane active">
+      <div class="page">
+        <div id="modsDropOverlay" class="mods-drop-overlay">
+          <div class="mods-drop-overlay-text">Отпусти, чтобы установить .jar/.zip в моды</div>
+        </div>
+
+        <header class="page-head">
+          <div>
+            <h1>Моды</h1>
+            <div id="modsCurrentTarget" class="current-target-badge"></div>
+          </div>
+          <button id="reinstallBtn" class="primary">Переустановить моды под версию</button>
+        </header>
+
+        <section class="card mod-compat-card">
+          <div class="card-head"><div><h2>Совместимость модов</h2><span class="card-note">Проверка новых версий под текущую сборку</span></div><div class="mod-compat-actions"><label class="mod-compat-auto"><input id="modCompatibilityAutoCheck" type="checkbox" checked> Автопроверка раз в сутки</label><button id="modCompatibilityCheckBtn" type="button">Проверить обновления</button></div></div>
+          <div id="modCompatibilityStatus" class="mod-compat-status">Проверка ещё не запускалась</div>
+          <div id="modCompatibilityResults" class="mod-compat-results"></div>
+        </section>
+        <section class="card">
+          <div class="search-bar">
+            <label class="search-field"><span class="ico search-ico" style="--ico-src:url('icons/search.svg')" aria-hidden="true"></span><input id="modSearch" placeholder="Поиск модов на Modrinth..."></label>
+            <button id="modSearchBtn" class="primary">Искать</button>
+          </div>
+          <div class="filter-bar">
+            <label>Сортировка
+              <select id="modSortSelect">
+              <option value="relevance">По релевантности</option>
+              <option value="downloads">По популярности</option>
+              <option value="newest">Сначала новые</option>
+              <option value="updated">Недавно обновлённые</option>
+            </select>
+            </label>
+            <label>Категория
+              <select id="modCategorySelect">
+              <option value="">Все категории</option>
+              <option value="adventure">Приключения</option>
+              <option value="decoration">Декор</option>
+              <option value="economy">Экономика</option>
+              <option value="equipment">Экипировка</option>
+              <option value="food">Еда</option>
+              <option value="game-mechanics">Игровые механики</option>
+              <option value="library">Библиотека</option>
+              <option value="magic">Магия</option>
+              <option value="minigame">Мини-игры</option>
+              <option value="mobs">Мобы</option>
+              <option value="optimization">Оптимизация</option>
+              <option value="storage">Хранение</option>
+              <option value="technology">Технологии</option>
+              <option value="transportation">Транспорт</option>
+              <option value="utility">Утилиты</option>
+              <option value="worldgen">Генерация мира</option>
+            </select>
+            </label>
+            <div id="modSourceRow" class="source-field" style="display:none">
+              <label>Источник
+                <select id="modSourceSelect">
+                  <option value="modrinth">Modrinth</option>
+                  <option value="curseforge">CurseForge</option>
+                </select>
+              </label>
+              <span id="modSourceHint" class="desc"></span>
+            </div>
+          </div>
+          <div class="option-bar">
+            <label class="check" title="Если выключено — зависимости мода не будут скачиваться вместе с ним">
+              <input type="checkbox" id="modInstallDepsToggle" checked>
+              Ставить зависимости вместе с модом
+            </label>
+            <label class="check">
+              <input type="checkbox" id="modsDryRun">
+              Сухой прогон (не скачивать)
+            </label>
+          </div>
+        </section>
+
+        <details class="card tools">
+          <summary>Инструменты: копирование списка, профили модпаков</summary>
+          <div class="tool-row" id="copyRow" style="display:none">
+            <label>Скопировать список модов с другой версии
+              <select id="copySource"></select>
+            </label>
+            <button id="copyBtn">Скопировать</button>
+          </div>
+          <div class="tool-row">
+            <label>Профили модпаков
+              <select id="modpackSelect"></select>
+            </label>
+            <button id="applyModpackBtn">Применить</button>
+            <button id="saveModpackBtn">Сохранить текущий список как профиль</button>
+            <button id="renameModpackBtn"><img class="inline-ico" src="icons/pen.svg" alt="">Переименовать</button>
+            <button id="deleteModpackBtn">Удалить профиль</button>
+          </div>
+          <div class="tool-row">
+            <button id="identifyLocalModsBtn">Опознать вручную закинутые моды на Modrinth</button>
+          </div>
+        </details>
+
+        <details class="card tools" id="modFavoritesDetails">
+          <summary>Избранные моды</summary>
+          <div class="desc">Сохраняй интересные моды из поиска и установленных файлов. Избранное хранится локально и доступно во всех сборках.</div>
+          <div id="modFavoritesList" class="mod-favorites-list"><div class="desc">Загружаю избранное...</div></div>
+        </details>
+
+        <div class="mods-columns">
+          <section class="card">
+            <div class="card-head"><h2>Результаты поиска</h2></div>
+            <div id="searchResults" class="mod-list"></div>
+            <div id="modSearchPagination" class="search-pagination"></div>
+          </section>
+          <section class="card">
+            <div class="card-head">
+              <h2>Выбранные моды</h2>
+              <div class="wanted-bulk-row" id="wantedBulkRow" style="display:none">
+                <label class="check">
+                  <input type="checkbox" id="wantedSelectAll">
+                  Выбрать все
+                </label>
+                <button id="wantedRemoveSelectedBtn" disabled>Удалить выбранные</button>
+              </div>
+            </div>
+            <div id="wantedList" class="mod-list"></div>
+          </section>
+        </div>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Установленные файлы</h2>
+            <span class="card-note">Можно перетащить .jar/.zip в окно, чтобы установить</span>
+          </div>
+          <div class="list-toolbar">
+            <input id="installedModsFilter" placeholder="Фильтр по имени файла или названию...">
+            <select id="installedModsSort" aria-label="Сортировка">
+            <option value="name">По имени</option>
+            <option value="status">Сначала включённые</option>
+          </select>
+            <button id="enableAllModsBtn">Включить все</button>
+            <button id="disableAllModsBtn">Выключить все</button>
+            <button id="refreshInstalledModsBtn">Обновить список</button>
+            <button id="modsDepsBtn">Проверка модов</button>
+            <button id="modsMetricsBtn">Метрики</button>
+            <button id="modsPerformanceBtn"><span class="ico" style="--ico-src:url('icons/activity.svg')" aria-hidden="true"></span>Производительность</button>
+            <button id="modsFavoritesBtn" aria-pressed="false"><span class="ico" style="--ico-src:url('icons/star.svg')" aria-hidden="true"></span>Избранное</button>
+          </div>
+          <details class="card tools mod-groups-tools">
+            <summary>Группы модов</summary>
+            <div class="mod-groups-toolbar">
+              <label>Показать
+                <select id="modsGroupFilter">
+                  <option value="all">Все моды</option>
+                  <option value="ungrouped">Без группы</option>
+                </select>
+              </label>
+              <label>Группа действий
+                <select id="modsGroupTarget">
+                  <option value="">Не выбрана</option>
+                </select>
+              </label>
+              <button id="modsCreateGroupBtn"><span class="ico" style="--ico-src:url('icons/folder.svg')" aria-hidden="true"></span>Создать группу</button>
+              <button id="modsRenameGroupBtn" disabled>Переименовать</button>
+              <button id="modsDeleteGroupBtn" disabled>Удалить группу</button>
+            </div>
+            <div class="mod-groups-toolbar">
+              <label class="check"><input type="checkbox" id="modsGroupSelectVisible"> Выбрать показанные</label>
+              <button id="modsAssignSelectedBtn" disabled>Добавить выбранные в группу</button>
+              <button id="modsRemoveSelectedBtn" disabled>Убрать из группы</button>
+              <span class="mod-groups-spacer"></span>
+              <button id="modsGroupEnableBtn" disabled>Включить группу</button>
+              <button id="modsGroupDisableBtn" disabled>Выключить группу</button>
+            </div>
+            <div class="desc">«Показать» фильтрует список, а «Группа действий» выбирает, куда добавлять моды и какой группой управлять. Для добавления оставь показ «Все моды», отметь нужные файлы и нажми «Добавить выбранные в группу».</div>
+          </details>
+          <div id="installedModsList" class="mod-list tall"></div>
+        </section>
+
+        <div class="progress-row" id="modsProgressRow" style="display:none">
+          <label id="modsProgressLabel">Загрузка...</label>
+          <progress id="modsProgressBar" value="0" max="100"></progress>
+        </div>
+
+        <details class="card tools">
+          <summary>Лог</summary>
+          <div class="tool-row"><button id="copyModsLogBtn">Скопировать лог</button></div>
+          <pre id="modsLog" class="log"></pre>
+        </details>
+      </div>
+    </div>
+
+    <div id="tab-resourcepacks" class="content-pane">
+      <div class="page">
+        <div id="rpDropOverlay" class="mods-drop-overlay">
+          <div class="mods-drop-overlay-text">Отпусти, чтобы установить .zip в ресурспаки</div>
+        </div>
+
+        <header class="page-head">
+          <div>
+            <h1>Ресурспаки</h1>
+            <div id="rpCurrentTarget" class="current-target-badge"></div>
+          </div>
+          <button id="rpReinstallBtn" class="primary">Переустановить ресурспаки под версию</button>
+        </header>
+
+        <section class="card">
+          <div class="search-bar">
+            <label class="search-field"><span class="ico search-ico" style="--ico-src:url('icons/search.svg')" aria-hidden="true"></span><input id="rpSearch" placeholder="Поиск ресурспаков на Modrinth..."></label>
+            <button id="rpSearchBtn" class="primary">Искать</button>
+          </div>
+          <div class="filter-bar">
+            <label>Сортировка
+              <select id="rpSortSelect">
+              <option value="relevance">По релевантности</option>
+              <option value="downloads">По популярности</option>
+              <option value="newest">Сначала новые</option>
+              <option value="updated">Недавно обновлённые</option>
+            </select>
+            </label>
+            <label>Категория
+              <select id="rpCategorySelect">
+              <option value="">Все категории</option>
+              <option value="8x-">8x и меньше</option>
+              <option value="16x">16x</option>
+              <option value="32x">32x</option>
+              <option value="64x">64x</option>
+              <option value="128x">128x</option>
+              <option value="256x+">256x и больше</option>
+              <option value="combat">Бой</option>
+              <option value="cursed">Странные</option>
+              <option value="decoration">Декор</option>
+              <option value="realistic">Реалистичные</option>
+              <option value="simplistic">Простые</option>
+              <option value="vanilla-like">В стиле ванили</option>
+            </select>
+            </label>
+          </div>
+          <div class="option-bar">
+            <label class="check">
+              <input type="checkbox" id="rpDryRun">
+              Сухой прогон (не скачивать)
+            </label>
+          </div>
+        </section>
+
+        <details class="card tools">
+          <summary>Инструменты: копирование списка, профили</summary>
+          <div class="tool-row" id="rpCopyRow" style="display:none">
+            <label>Скопировать список ресурспаков с другой версии
+              <select id="rpCopySource"></select>
+            </label>
+            <button id="rpCopyBtn">Скопировать</button>
+          </div>
+          <div class="desc rp-profile-hint">Профиль сохраняет список ресурспаков и состояние установленных ZIP. При применении текущий список заменяется; недостающие файлы можно загрузить отдельно.</div>
+          <div class="tool-row">
+            <label>Профили ресурспаков
+              <select id="rpProfileSelect"></select>
+            </label>
+            <button id="rpApplyProfileBtn">Применить</button>
+            <button id="rpSaveProfileBtn">Сохранить текущий список как профиль</button>
+            <button id="rpRenameProfileBtn"><img class="inline-ico" src="icons/pen.svg" alt="">Переименовать</button>
+            <button id="rpDeleteProfileBtn">Удалить профиль</button>
+          </div>
+          <div class="tool-row">
+            <button id="identifyLocalResourcePacksBtn">Опознать вручную закинутые ресурспаки на Modrinth</button>
+          </div>
+        </details>
+
+        <div class="mods-columns gallery-columns">
+          <section class="card">
+            <div class="card-head"><h2>Результаты поиска</h2></div>
+            <div id="rpSearchResults" class="mod-list gallery"></div>
+            <div id="rpSearchPagination" class="search-pagination"></div>
+          </section>
+          <section class="card">
+            <div class="card-head">
+              <h2>Выбранные ресурспаки</h2>
+              <div class="wanted-bulk-row" id="rpWantedBulkRow" style="display:none">
+                <label class="check">
+                  <input type="checkbox" id="rpWantedSelectAll">
+                  Выбрать все
+                </label>
+                <button id="rpWantedRemoveSelectedBtn" disabled>Удалить выбранные</button>
+              </div>
+            </div>
+            <div id="rpWantedList" class="mod-list wanted-grid"></div>
+          </section>
+        </div>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Установленные файлы</h2>
+            <span class="card-note">Можно перетащить .zip в окно, чтобы установить</span>
+          </div>
+          <div class="list-toolbar">
+            <input id="installedRpFilter" placeholder="Фильтр по имени файла или названию...">
+            <select id="installedRpSort" aria-label="Сортировка">
+            <option value="name">По имени</option>
+            <option value="status">Сначала включённые</option>
+          </select>
+            <button id="enableAllRpBtn">Включить все</button>
+            <button id="disableAllRpBtn">Выключить все</button>
+            <button id="refreshInstalledRpBtn">Обновить список</button>
+          </div>
+          <div id="installedRpList" class="mod-list tall"></div>
+        </section>
+
+        <div class="progress-row" id="rpProgressRow" style="display:none">
+          <label id="rpProgressLabel">Загрузка...</label>
+          <progress id="rpProgressBar" value="0" max="100"></progress>
+        </div>
+
+        <details class="card tools">
+          <summary>Лог</summary>
+          <div class="tool-row"><button id="copyRpLogBtn">Скопировать лог</button></div>
+          <pre id="rpLog" class="log"></pre>
+        </details>
+      </div>
+    </div>
+
+<div id="tab-shaders" class="content-pane">
+      <div class="page">
+        <div id="shDropOverlay" class="mods-drop-overlay">
+          <div class="mods-drop-overlay-text">Отпусти, чтобы установить .zip в шейдеры</div>
+        </div>
+
+        <header class="page-head">
+          <div>
+            <h1>Шейдеры</h1>
+            <div id="shCurrentTarget" class="current-target-badge"></div>
+          </div>
+          <button id="shReinstallBtn" class="primary">Переустановить шейдеры под версию</button>
+        </header>
+        <div class="page-note">Нужен загрузчик шейдеров в игре (Iris или OptiFine) — без него паки просто не появятся в настройках видео.</div>
+
+        <section class="card">
+          <div class="search-bar">
+            <label class="search-field"><span class="ico search-ico" style="--ico-src:url('icons/search.svg')" aria-hidden="true"></span><input id="shSearch" placeholder="Поиск шейдеров на Modrinth..."></label>
+            <button id="shSearchBtn" class="primary">Искать</button>
+          </div>
+          <div class="filter-bar">
+            <label>Сортировка
+              <select id="shSortSelect">
+              <option value="relevance">По релевантности</option>
+              <option value="downloads">По популярности</option>
+              <option value="newest">Сначала новые</option>
+              <option value="updated">Недавно обновлённые</option>
+            </select>
+            </label>
+            <label>Категория
+              <select id="shCategorySelect">
+              <option value="">Все категории</option>
+              <option value="fantasy">Фэнтези</option>
+              <option value="realistic">Реалистичные</option>
+              <option value="semi-realistic">Полуреалистичные</option>
+              <option value="vanilla-like">В стиле ванили</option>
+              <option value="cartoon">Мультяшные</option>
+              <option value="low">Слабый ПК</option>
+              <option value="medium">Средний ПК</option>
+              <option value="high">Мощный ПК</option>
+              <option value="reflections">Отражения</option>
+              <option value="colored-lighting">Цветной свет</option>
+              <option value="path-tracing">Path tracing</option>
+            </select>
+            </label>
+          </div>
+          <div class="option-bar">
+            <label class="check">
+              <input type="checkbox" id="shDryRun">
+              Сухой прогон (не скачивать)
+            </label>
+          </div>
+        </section>
+
+        <div class="mods-columns gallery-columns">
+          <section class="card">
+            <div class="card-head"><h2>Результаты поиска</h2></div>
+            <div id="shSearchResults" class="mod-list gallery"></div>
+            <div id="shSearchPagination" class="search-pagination"></div>
+          </section>
+          <section class="card">
+            <div class="card-head">
+              <h2>Выбранные шейдеры</h2>
+            </div>
+            <div id="shWantedList" class="mod-list wanted-grid"></div>
+          </section>
+        </div>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Установленные файлы</h2>
+            <span class="card-note">Можно перетащить .zip в окно, чтобы установить</span>
+          </div>
+          <div class="list-toolbar">
+            <input id="installedShFilter" placeholder="Фильтр по имени файла или названию...">
+            <select id="installedShSort" aria-label="Сортировка">
+            <option value="name">По имени</option>
+            <option value="status">Сначала включённые</option>
+          </select>
+            <button id="enableAllShBtn">Включить все</button>
+            <button id="disableAllShBtn">Выключить все</button>
+            <button id="refreshInstalledShBtn">Обновить список</button>
+          </div>
+          <div id="installedShList" class="mod-list tall"></div>
+        </section>
+
+        <div class="progress-row" id="shProgressRow" style="display:none">
+          <label id="shProgressLabel">Загрузка...</label>
+          <progress id="shProgressBar" value="0" max="100"></progress>
+        </div>
+
+        <details class="card tools">
+          <summary>Лог</summary>
+          <div class="tool-row"><button id="copyShLogBtn">Скопировать лог</button></div>
+          <pre id="shLog" class="log"></pre>
+        </details>
+      </div>
+    </div>
+    </section>
+
+<section id="tab-worlds" class="tab">
+      <div class="page">
+        <header class="page-head">
+          <div>
+            <h1>Миры</h1>
+            <div id="worldsCurrentTarget" class="current-target-badge"></div>
+          </div>
+          <div class="head-actions">
+            <button id="refreshWorldsBtn"><span class="ico" style="--ico-src:url('icons/update.svg')" aria-hidden="true"></span>Обновить</button>
+            <button id="openSavesFolderBtn" class="primary">Папка saves</button>
+          </div>
+        </header>
+        <div class="page-note">Здесь серверы из списка выбранной сборки и её одиночные миры из папки saves. С кнопки «Играть» игра запускается и сразу заходит на сервер или в мир. Переименование мира меняет название в списке Minecraft, папку не трогает. Перед удалением лаунчер сохраняет zip-копию мира в бэкапах.</div>
+
+        <section class="card" id="serversCard">
+          <div class="srv-head">
+            <h2>Серверы</h2>
+            <button id="addServerBtn" class="primary">Добавить сервер</button>
+          </div>
+          <div id="serversEmpty" class="empty-state" style="display:none">Серверов пока нет. Добавь адрес, и сюда можно будет заходить одной кнопкой.</div>
+          <div id="serversList" class="srv-list"></div>
+        </section>
+
+        <section class="card">
+          <div class="srv-head"><h2>Одиночные миры</h2></div>
+          <div class="list-toolbar">
+            <label class="search-field"><span class="ico search-ico" style="--ico-src:url('icons/search.svg')" aria-hidden="true"></span><input id="worldsSearch" placeholder="Поиск по названию мира..."></label>
+            <select id="worldsSort">
+              <option value="played">Недавно играл</option>
+              <option value="name">По названию</option>
+              <option value="size">По размеру</option>
+            </select>
+          </div>
+          <div id="worldsSummary" class="list-summary"></div>
+          <div id="worldsEmpty" class="empty-state" style="display:none">Миров пока нет. Создай мир в игре, и он появится здесь.</div>
+          <div id="worldsList" class="world-grid"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="tab-settings" class="tab">
+      <div class="page">
+        <header class="page-head">
+          <div>
+            <h1>Настройки</h1>
+            <div class="current-target-badge">Версия лаунчера: <b id="appVersionHeader"></b></div>
+          </div>
+        </header>
+
+        <div class="settings-layout">
+          <nav class="settings-nav" aria-label="Разделы настроек">
+            <button type="button" data-target="sec-game">Игра и Java</button>
+            <button type="button" data-target="sec-skin">Скин</button>
+            <button type="button" data-target="sec-lang">Язык</button>
+            <button type="button" data-target="sec-sounds">Звуки</button>
+            <button type="button" data-target="sec-behavior">Поведение</button>
+            <button type="button" data-target="sec-backups">Резервные копии</button>
+            <button type="button" data-target="sec-diag">Диагностика</button>
+            <button type="button" data-target="sec-storage">Хранилище</button>
+            <button type="button" data-target="sec-about">Обновления и помощь</button>
+          </nav>
+
+          <div class="settings-content">
+
+            <section id="sec-game" class="card settings-group">
+              <h2>Игра и Java</h2>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Папка игры</div>
+                  <div class="setting-desc" id="gameDirLabel"></div>
+                </div>
+                <div class="setting-control"><button id="changeDirBtn">Изменить</button></div>
+              </div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Оперативная память</div>
+                  <div class="setting-desc">Минимум и максимум для игры. <span id="memRecommendation" class="memory-recommendation"></span></div>
+                </div>
+                <div class="setting-control">
+                  <select id="memPreset">
+                    <option value="">Свои значения</option>
+                    <option value="1G,2G">Слабый ПК (1G / 2G)</option>
+                    <option value="1G,4G">Стандарт (1G / 4G)</option>
+                    <option value="2G,6G">Комфортно (2G / 6G)</option>
+                    <option value="2G,8G">С запасом (2G / 8G)</option>
+                    <option value="4G,12G">Мощный ПК (4G / 12G)</option>
+                  </select>
+                  <button id="memAutoBtn" type="button" title="Подобрать по объёму ОЗУ этого компьютера">Авто</button>
+                  <input id="memMin" class="w-xs" aria-label="Минимум памяти">
+                  <input id="memMax" class="w-xs" aria-label="Максимум памяти">
+                  <button id="saveMemBtn" class="primary">Сохранить</button>
+                </div>
+              </div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Путь к Java</div>
+                  <div class="setting-desc" id="javaPathLabel">по умолчанию (скачается сама)</div>
+                </div>
+                <div class="setting-control">
+                  <button id="setJavaPathBtn">Выбрать</button>
+                  <button id="clearJavaPathBtn">Сбросить</button>
+                  <button id="checkJavaBtn">Проверить совместимость</button>
+                </div>
+              </div>
+              <div class="setting" id="javaCheckResultRow" style="display:none">
+                <div class="setting-text"><div id="javaCheckResultLabel" class="setting-desc"></div></div>
+              </div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Скачать Java заранее</div>
+                  <div class="setting-desc">Иначе нужная версия скачается при первом запуске.</div>
+                </div>
+                <div class="setting-control">
+                  <button class="java-install-btn" data-major="8">Java 8</button>
+                  <button class="java-install-btn" data-major="17">Java 17</button>
+                  <button class="java-install-btn" data-major="21">Java 21</button>
+                </div>
+              </div>
+              <div class="setting setting-wide" id="javaInstallProgressRow" style="display:none">
+                <label id="javaInstallProgressLabel" class="setting-name">Скачивание...</label>
+                <progress id="javaInstallProgressBar" value="0" max="100"></progress>
+              </div>
+              <div id="javaInstalledList" class="mod-list setting-list"></div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Аргументы JVM</div>
+                  <div class="setting-desc">Дополнительные параметры запуска Java.</div>
+                </div>
+                <div class="setting-control">
+                  <input id="jvmArgs" class="w-lg" placeholder="-XX:+UseG1GC -Dfile.encoding=UTF-8">
+                  <button id="saveJvmArgsBtn" class="primary">Сохранить</button>
+                </div>
+              </div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Ключ CurseForge API</div>
+                  <div class="setting-desc">Нужен для поиска модов на CurseForge (Forge-сборки) и импорта CurseForge-модпаков. Ключ хранится на твоём диске и уходит только в CurseForge.</div>
+                </div>
+                <div class="setting-control">
+                  <input id="curseforgeApiKeyInput" class="w-lg" type="password" placeholder="Вставь свой ключ...">
+                  <button id="saveCurseforgeApiKeyBtn" class="primary">Сохранить</button>
+                  <button id="openCurseforgeConsoleBtn">Получить бесплатный ключ</button>
+                </div>
+              </div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Окно игры</div>
+                  <div class="setting-desc">Размер окна Minecraft при запуске.</div>
+                </div>
+                <div class="setting-control">
+                  <input id="gameWidth" class="w-xs" aria-label="Ширина окна игры" placeholder="Ширина">
+                  <input id="gameHeight" class="w-xs" aria-label="Высота окна игры" placeholder="Высота">
+                  <label class="inline-check">
+                    <input type="checkbox" id="fullscreenCheck">
+                    Полный экран
+                  </label>
+                  <button id="saveWindowBtn" class="primary">Сохранить</button>
+                </div>
+              </div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">После запуска игры</div>
+                </div>
+                <div class="setting-control">
+                  <select id="afterLaunchSelect">
+                    <option value="keep">Оставить лаунчер открытым</option>
+                    <option value="minimize">Свернуть лаунчер</option>
+                    <option value="close">Закрыть лаунчер</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Видеокарта для игры</div>
+                </div>
+                <div class="setting-control">
+                  <select id="gpuPreferenceSelect">
+                    <option value="auto">Как решит Windows</option>
+                    <option value="powersaving">Встроенная (экономичная)</option>
+                    <option value="performance">Дискретная (производительная)</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section id="sec-skin" class="card settings-group">
+              <h2>Скин</h2>
+              <div id="skinRow" class="skin-layout">
+                <div class="skin-preview">
+                  <canvas id="skin3dPreview" width="220" height="280"></canvas>
+                  <div id="skin3dDropHint" class="setting-desc">Перетащи PNG сюда для превью</div>
+                  <div class="skin-anims">
+                    <button id="anim3dIdle" class="skin3d-anim-btn active" data-anim="idle" title="Стоя">Стоя</button>
+                    <button id="anim3dWalk" class="skin3d-anim-btn" data-anim="walk" title="Ходьба">Ходьба</button>
+                    <button id="anim3dRun" class="skin3d-anim-btn" data-anim="run" title="Бег">Бег</button>
+                    <button id="anim3dFly" class="skin3d-anim-btn" data-anim="fly" title="Полёт на элитрах">Элитры</button>
+                  </div>
+                </div>
+                <div class="skin-controls">
+                  <div>
+                    <div class="setting-name">Мой скин</div>
+                    <div id="skinAccountTypeLabel" class="setting-desc"></div>
+                  </div>
+                  <div class="skin-buttons">
+                    <button id="changeSkinBtn" class="primary" style="display:none">Загрузить новый скин (PNG)</button>
+                    <select id="skinVariantSelect" style="display:none">
+                      <option value="classic">Обычная модель</option>
+                      <option value="slim">Тонкие руки (Alex)</option>
+                    </select>
+                    <button id="openElybySkinBtn" style="display:none">Открыть загрузку скина на ely.by</button>
+                  </div>
+
+                  <div id="skinManager" class="skin-manager" style="display:none">
+                    <div class="skin-manager-block">
+                      <div class="setting-name">Плащ</div>
+                      <div id="capeList" class="cape-list"></div>
+                    </div>
+                    <div class="skin-manager-block">
+                      <div class="setting-name">Библиотека скинов</div>
+                      <div class="setting-desc">Загруженные скины сохраняются здесь, к любому можно вернуться в один клик.</div>
+                      <div id="skinLibrary" class="skin-library"></div>
+                      <div class="skin-buttons">
+                        <button id="skinLibraryAddBtn">Добавить PNG в библиотеку</button>
+                        <button id="undoSkinBtn" style="display:none" title="Вернуть скин, который был до последней смены">Отменить смену скина</button>
+                        <button id="resetSkinBtn">Сбросить скин</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="setting setting-flat">
+                    <div class="setting-text">
+                      <div class="setting-name">CustomSkinLoader на Fabric и Forge</div>
+                      <div class="setting-desc">Показывает скины на любых серверах, даже без Ely.by и authlib-injector. Работает только с модами, на ванильном загрузчике эффекта нет.</div>
+                    </div>
+                    <div class="setting-control"><input type="checkbox" id="customSkinLoaderCheck" aria-label="CustomSkinLoader"></div>
+                  </div>
+
+                  <div class="skin-lookup">
+                    <div class="setting-name">Посмотреть чужой скин</div>
+                    <div class="setting-control">
+                      <input type="text" id="skinLookupInput" class="w-md" placeholder="Ник игрока...">
+                      <button id="skinLookupBtn">Показать</button>
+                      <button id="skinLookupResetBtn" style="display:none">Вернуть свой</button>
+                    </div>
+                    <div id="skinLookupStatus" class="setting-desc"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section id="sec-lang" class="card settings-group">
+              <h2>Язык</h2>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name" data-no-i18n>Язык / Language</div>
+                  <div class="setting-desc">Язык интерфейса. Окно перезагрузится.</div>
+                </div>
+                <div class="setting-control">
+                  <select id="languageSelect" aria-label="Language" data-no-i18n>
+                    <option value="ru">Русский</option>
+                    <option value="en">English</option>
+                  </select>
+                </div>
+              </div>
+            </section>
+
+            <section id="sec-sounds" class="card settings-group">
+              <h2>Звуки уведомлений</h2>
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Громкость</div>
+                  <div class="setting-desc">Любой звук можно заменить своим аудиофайлом.</div>
+                </div>
+                <div class="setting-control">
+                  <input id="notificationSoundVolume" type="range" min="0" max="100" value="50" aria-label="Громкость звуков">
+                  <span id="notificationSoundVolumeLabel" class="volume-label">50%</span>
+                  <button id="testNotificationSoundBtn">Проверить</button>
+                </div>
+              </div>
+              <div id="customSoundsList" class="sound-list"></div>
+            </section>
+
+            <section id="sec-behavior" class="card settings-group">
+              <h2>Уведомления и поведение</h2>
+
+              <label class="setting setting-toggle">
+                <div class="setting-text"><div class="setting-name">Discord Rich Presence</div><div class="setting-desc">Показывать в Discord, во что ты играешь.</div></div>
+                <input type="checkbox" id="discordRpcCheck">
+              </label>
+              <label class="setting setting-toggle">
+                <div class="setting-text"><div class="setting-name">Лог игры на главной</div><div class="setting-desc">Показывать вывод игры на вкладке «Главная».</div></div>
+                <input type="checkbox" id="gameLogsCheck">
+              </label>
+              <label class="setting setting-toggle">
+                <div class="setting-text"><div class="setting-name">Дебаг-режим</div><div class="setting-desc">Больше логов и DevTools.</div></div>
+                <input type="checkbox" id="debugModeCheck">
+              </label>
+              <label class="setting setting-toggle">
+                <div class="setting-text"><div class="setting-name">Системные уведомления</div></div>
+                <input type="checkbox" id="notificationsCheck">
+              </label>
+              <div class="setting">
+                <div class="setting-text"><div class="setting-name">Где показывать уведомления</div></div>
+                <div class="setting-control">
+                  <select id="notificationModeSelect">
+                    <option value="internal">Только в лаунчере</option>
+                    <option value="external">Поверх других окон</option>
+                  </select>
+                </div>
+              </div>
+              <label class="setting setting-toggle">
+                <div class="setting-text"><div class="setting-name">Сворачивать в трей</div><div class="setting-desc">Закрытие окна убирает лаунчер в трей, а не выключает его.</div></div>
+                <input type="checkbox" id="minimizeToTrayCheck">
+              </label>
+              <button id="findCatBtn" class="cat-secret-btn" title="?">🐾</button>
+            </section>
+
+            <section id="sec-backups" class="card settings-group">
+              <h2>Резервные копии</h2>
+
+              <label class="setting setting-toggle">
+                <div class="setting-text"><div class="setting-name">Бэкап миров перед переустановкой модов</div></div>
+                <input type="checkbox" id="backupSavesCheck">
+              </label>
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Копии миров</div>
+                  <div class="setting-desc">Zip-архивы папки saves.</div>
+                </div>
+                <div class="setting-control">
+                  <button id="makeBackupNowBtn" class="primary">Сделать бэкап сейчас</button>
+                  <button id="openBackupsFolderBtn">Папка бэкапов</button>
+                  <button id="refreshBackupsListBtn">Обновить</button>
+                </div>
+              </div>
+              <div id="backupsList" class="mod-list setting-list"></div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Снимки сборки 2.0</div>
+                  <div class="setting-desc">Сохраняются моды, ресурспаки, шейдеры, конфиги и игровые настройки. Миры не входят в снимок — для них есть отдельные копии. Перед восстановлением текущая сборка автоматически сохраняется ещё раз. Хранятся последние 30 снимков.</div>
+                </div>
+                <div class="setting-control">
+                  <button id="makeBuildBackupNowBtn" class="primary">Создать снимок</button>
+                  <button id="openBuildBackupsFolderBtn">Папка снимков</button>
+                  <button id="refreshBuildBackupsListBtn">Обновить</button>
+                </div>
+              </div>
+              <div id="buildBackupsList" class="mod-list setting-list"></div>
+
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Настройки лаунчера</div>
+                  <div class="setting-desc">Перенос на другой компьютер: память, JVM-аргументы, тема, градиент, поведение. Аккаунты, пути и ключ CurseForge в файл не попадают.</div>
+                </div>
+                <div class="setting-control">
+                  <button id="exportSettingsBtn">Экспортировать</button>
+                  <button id="importSettingsBtn">Импортировать</button>
+                </div>
+              </div>
+            </section>
+
+            <section id="sec-diag" class="card settings-group">
+              <h2>Диагностика</h2>
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Крашлоги</div>
+                  <div class="setting-desc">Отчёты о вылетах игры.</div>
+                </div>
+                <div class="setting-control">
+                  <button id="openCrashFolderBtn">Папка крашлогов</button>
+                  <button id="refreshCrashListBtn">Обновить</button>
+                </div>
+              </div>
+              <div id="crashReportsList" class="mod-list setting-list"></div>
+            </section>
+
+            <section id="sec-storage" class="card settings-group">
+              <h2>Хранилище</h2>
+              <div class="storage-toolbar">
+                <div class="setting-text">
+                  <div class="setting-name">Анализ занимаемого места</div>
+                  <div class="setting-desc">Размер сборок, ресурсов Minecraft, модов, миров, скриншотов и других папок. Анализ только читает файлы и ничего не удаляет.</div>
+                </div>
+                <button id="storageAnalyzeBtn" class="primary"><span class="ico" style="--ico-src:url('icons/hard-drive.svg')" aria-hidden="true"></span>Анализировать</button>
+              </div>
+              <div id="storageReport" class="storage-report">
+                <div class="desc">Нажми «Анализировать», чтобы посмотреть, что занимает место.</div>
+              </div>
+            </section>
+
+            <section id="sec-about" class="card settings-group">
+              <h2>Обновления и помощь</h2>
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Версия лаунчера</div>
+                  <div class="setting-desc" id="appVersionLabel">—</div>
+                </div>
+                <div class="setting-control"><button id="checkUpdatesBtn">Проверить обновления</button></div>
+              </div>
+              <div class="setting setting-wide" id="updateProgressRow" style="display:none">
+                <label id="updateProgressLabel" class="setting-name">Загрузка обновления...</label>
+                <progress id="updateProgressBar" value="0" max="100"></progress>
+              </div>
+              <div class="setting">
+                <div class="setting-text">
+                  <div class="setting-name">Обучение</div>
+                  <div class="setting-desc">Короткий тур по основным вкладкам.</div>
+                </div>
+                <div class="setting-control"><button id="replayTourBtn">Показать заново</button></div>
+              </div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-appearance" class="tab">
+      <div class="page ap-page">
+        <header class="page-head">
+          <div>
+            <h1>Оформление</h1>
+            <div class="current-target-badge">Цвета, форма, шрифт и фон лаунчера — всё применяется сразу</div>
+          </div>
+          <div class="ap-head-actions">
+            <button type="button" id="apCopyBtn" title="Скопировать текущее оформление в виде кода">Поделиться</button>
+            <button type="button" id="apImportBtn">Импорт</button>
+            <button type="button" id="apResetBtn">Сбросить всё</button>
+          </div>
+        </header>
+
+        <div id="apImportBox" class="card ap-import" hidden>
+          <textarea id="apImportText" rows="3" placeholder="Вставьте код оформления, он начинается с FCAP1:" spellcheck="false"></textarea>
+          <div class="ap-import-actions">
+            <span id="apImportMsg" class="setting-desc"></span>
+            <button type="button" id="apImportCancel">Отмена</button>
+            <button type="button" id="apImportApply" class="primary">Применить</button>
+          </div>
+        </div>
+
+        <section class="card settings-group">
+          <h2>Пресеты</h2>
+          <div id="apPresets" class="ap-presets"></div>
+          <div class="setting ap-save-row">
+            <div class="setting-text">
+              <div class="setting-name">Сохранить текущее оформление</div>
+              <div class="setting-desc">Пресет запомнит цвета, форму, шрифт и режим. Фоновая картинка в пресет не входит.</div>
+            </div>
+            <div class="setting-control">
+              <input id="apPresetName" maxlength="32" placeholder="Название пресета" aria-label="Название пресета">
+              <button type="button" id="apPresetSave" class="primary">Сохранить</button>
+            </div>
+          </div>
+        </section>
+
+        <section id="sec-look" class="card settings-group">
+          <h2>Внешний вид</h2>
+
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Режим</div></div>
+            <div class="setting-control">
+              <div id="modePicker" class="theme-picker">
+                <button class="mode-swatch" data-mode="dark" title="Тёмная"><img class="mode-ico" src="icons/moon.svg" alt=""></button>
+                <button class="mode-swatch" data-mode="light" title="Светлая"><img class="mode-ico" src="icons/sun.svg" alt=""></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Акцентный цвет</div></div>
+            <div class="setting-control">
+              <div id="themePicker" class="theme-picker">
+                <button class="theme-swatch" data-theme="green" title="FCore Blue"></button>
+                <button class="theme-swatch" data-theme="blue" title="Синяя"></button>
+                <button class="theme-swatch" data-theme="purple" title="Фиолетовая"></button>
+                <button class="theme-swatch" data-theme="crimson" title="Красная"></button>
+                <button class="theme-swatch" data-theme="gradient" id="gradientThemeSwatch" title="Градиент"></button>
+                <button class="theme-swatch" data-theme="synt" id="syntThemeSwatch" title="Синт" style="display:none"></button>
+                <button class="theme-swatch" data-theme="custom" id="customThemeSwatch" title="Своя">
+                  <input type="color" id="customThemeInput" value="#4b58ff">
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="setting setting-wide">
+            <div class="setting-text">
+              <div class="setting-name">Градиент</div>
+              <div class="setting-desc">Включается плашкой «Градиент» выше — любое изменение здесь включает её сам.</div>
+            </div>
+            <div id="gradientEditorHost"></div>
+          </div>
+
+          <div class="setting setting-wide" id="buildAccentCard">
+            <div class="setting-text">
+              <div class="setting-name">Цвет выбранной сборки</div>
+              <div class="setting-desc">У каждой версии лаунчера может быть свой цвет или градиент — он перекрашивает интерфейс, пока выбрана эта сборка.</div>
+            </div>
+            <div id="buildAccentHost"></div>
+          </div>
+
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Иконка лаунчера</div></div>
+            <div class="setting-control">
+              <button id="setCustomIconBtn">Выбрать из галереи</button>
+              <button id="resetIconBtn">Вернуть стандартную</button>
+            </div>
+          </div>
+
+          <div class="setting">
+            <div class="setting-text">
+              <div class="setting-name">Размер окна лаунчера</div>
+              <div class="setting-desc">Минимум 960 на 600.</div>
+            </div>
+            <div class="setting-control">
+              <input id="launcherWidth" class="w-xs" type="number" min="960" aria-label="Ширина окна лаунчера" placeholder="Ширина">
+              <input id="launcherHeight" class="w-xs" type="number" min="600" aria-label="Высота окна лаунчера" placeholder="Высота">
+              <button id="saveLauncherSizeBtn" class="primary">Сохранить</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card settings-group">
+          <h2>Цвета</h2>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Режим</div><div class="setting-desc">Светлая или тёмная основа интерфейса.</div></div>
+            <div class="setting-control">
+              <div class="segmented" id="apMode">
+                <button type="button" data-mode="dark">Тёмный</button>
+                <button type="button" data-mode="light">Светлый</button>
+              </div>
+            </div>
+          </div>
+          <div id="apColors" class="ap-colors"></div>
+          <div class="setting-desc ap-hint">Пока цвет не выбран, берётся из текущей темы. Цвета ниже перекрывают выбранную тему, а акцент — ещё и градиент.</div>
+        </section>
+
+        <section class="card settings-group">
+          <h2>Форма и размеры</h2>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Скругление углов</div><div class="setting-desc">От острых углов до почти круглых.</div></div>
+            <div class="setting-control ap-range"><input type="range" id="apRadius" min="0" max="28" step="1"><output id="apRadiusOut"></output></div>
+          </div>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Масштаб интерфейса</div><div class="setting-desc">Увеличивает или уменьшает весь лаунчер.</div></div>
+            <div class="setting-control ap-range"><input type="range" id="apScale" min="80" max="130" step="5"><output id="apScaleOut"></output></div>
+          </div>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Шрифт</div><div class="setting-desc">Выбери встроенный шрифт, укажи установленный в системе или загрузи файл WOFF2, WOFF, TTF или OTF.</div></div>
+            <div class="setting-control ap-font-controls">
+              <select id="apFont" aria-label="Шрифт">
+                <option value="default">Manrope (стандартный)</option>
+                <option value="system">Системный</option>
+                <option value="mono">JetBrains Mono</option>
+                <option value="serif">С засечками</option>
+                <option value="custom">Свой…</option>
+              </select>
+              <input id="apFontCustom" maxlength="40" placeholder="Название установленного шрифта" aria-label="Название шрифта" hidden>
+              <button type="button" id="apFontPick">Выбрать файл</button>
+              <span id="apFontFileLabel" class="setting-desc ap-font-file-label">Файл не выбран</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="card settings-group">
+          <h2>Боковое меню</h2>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Положение</div></div>
+            <div class="setting-control">
+              <div class="segmented" id="apSidePos">
+                <button type="button" data-value="left">Слева</button>
+                <button type="button" data-value="right">Справа</button>
+              </div>
+            </div>
+          </div>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Вид</div><div class="setting-desc">Компактное меню показывает только иконки.</div></div>
+            <div class="setting-control">
+              <div class="segmented" id="apSideStyle">
+                <button type="button" data-value="full">Полное</button>
+                <button type="button" data-value="compact">Компактное</button>
+              </div>
+            </div>
+          </div>
+          <div class="setting" id="apSideWidthRow">
+            <div class="setting-text"><div class="setting-name">Ширина</div></div>
+            <div class="setting-control ap-range"><input type="range" id="apSideWidth" min="200" max="320" step="4"><output id="apSideWidthOut"></output></div>
+          </div>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Прозрачность меню</div><div class="setting-desc">Лучше всего видна вместе с фоновой картинкой.</div></div>
+            <div class="setting-control ap-range"><input type="range" id="apSideOpacity" min="30" max="100" step="5"><output id="apSideOpacityOut"></output></div>
+          </div>
+        </section>
+
+        <section class="card settings-group">
+          <h2>Фон и анимации</h2>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Фоновая картинка</div><div class="setting-desc" id="apBgLabel">Не выбрана</div></div>
+            <div class="setting-control">
+              <button type="button" id="apBgPick">Выбрать</button>
+              <button type="button" id="apBgClear">Убрать</button>
+            </div>
+          </div>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Прозрачность панелей</div><div class="setting-desc">Карточки, меню, окна и поля становятся полупрозрачными — фон просвечивает.</div></div>
+            <div class="setting-control ap-range"><input type="range" id="apPanelOpacity" min="30" max="100" step="5"><output id="apPanelOpacityOut"></output></div>
+          </div>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Затемнение фона</div></div>
+            <div class="setting-control ap-range"><input type="range" id="apBgDim" min="0" max="90" step="5"><output id="apBgDimOut"></output></div>
+          </div>
+          <div class="setting">
+            <div class="setting-text"><div class="setting-name">Размытие фона</div></div>
+            <div class="setting-control ap-range"><input type="range" id="apBgBlur" min="0" max="30" step="1"><output id="apBgBlurOut"></output></div>
+          </div>
+          <label class="setting setting-toggle">
+            <div class="setting-text"><div class="setting-name">Отключить анимации</div><div class="setting-desc">Интерфейс переключается мгновенно. Полезно на слабых ПК.</div></div>
+            <input type="checkbox" id="apReduceMotion">
+          </label>
+        </section>
+      </div>
+    </section>
+
+    <section id="tab-downloads" class="tab">
+      <div class="page download-page">
+        <header class="page-head">
+          <div>
+            <h1>Менеджер загрузок</h1>
+            <div class="current-target-badge">Загрузки Minecraft, модов, ресурспаков, шейдеров и Java в одном месте</div>
+          </div>
+          <div class="head-actions">
+            <button type="button" id="refreshDownloadsBtn"><span class="ico" style="--ico-src:url('icons/update.svg')" aria-hidden="true"></span> Обновить</button>
+            <button type="button" id="clearDownloadsHistoryBtn" class="secondary"><span class="ico" style="--ico-src:url('icons/trash.svg')" aria-hidden="true"></span> Очистить историю</button>
+          </div>
+        </header>
+
+        <div class="download-summary-grid" id="downloadSummaryGrid">
+          <section class="card download-summary-card"><div class="download-summary-icon"><span class="ico" style="--ico-src:url('icons/download.svg')" aria-hidden="true"></span></div><div><div class="download-summary-label">Активные задачи</div><strong id="downloadsActiveCount">0</strong></div></section>
+          <section class="card download-summary-card"><div class="download-summary-icon"><span class="ico" style="--ico-src:url('icons/circle-check.svg')" aria-hidden="true"></span></div><div><div class="download-summary-label">Завершено</div><strong id="downloadsCompletedCount">0</strong></div></section>
+          <section class="card download-summary-card"><div class="download-summary-icon"><span class="ico" style="--ico-src:url('icons/hard-drive.svg')" aria-hidden="true"></span></div><div><div class="download-summary-label">Общая скорость</div><strong id="downloadsTotalSpeed">0 Б/с</strong></div></section>
+        </div>
+
+        <section class="card download-list-card">
+          <div class="card-head"><div><h2>В процессе</h2><span class="card-note">Текущие загрузки и установка компонентов</span></div><span id="downloadsActiveLabel" class="current-target-badge">0 задач</span></div>
+          <div id="downloadsActiveList" class="download-task-list"><div class="download-empty">Сейчас ничего не загружается.</div></div>
+        </section>
+
+        <section class="card download-list-card">
+          <div class="card-head"><div><h2>История загрузок</h2><span class="card-note">Последние завершённые и неудачные операции</span></div><span id="downloadsHistoryLabel" class="current-target-badge">0 задач</span></div>
+          <div id="downloadsHistoryList" class="download-task-list"><div class="download-empty">История пока пустая.</div></div>
+        </section>
+        <div class="download-footnote">История хранится локально. Отмена доступна для загрузок через внутренний загрузчик FCore; подготовку Minecraft через сторонний загрузчик можно только отслеживать. Активные задачи при закрытии лаунчера отмечаются как прерванные.</div>
+      </div>
+    </section>
+
+    <section id="tab-activity" class="tab">
+      <div class="page activity-page">
+        <header class="page-head">
+          <div>
+            <h1>Игровая активность</h1>
+            <div class="current-target-badge">Время в игре, сборки, моды и история запусков</div>
+          </div>
+          <div class="head-actions">
+            <button type="button" id="refreshActivityBtn"><span class="ico" style="--ico-src:url('icons/update.svg')" aria-hidden="true"></span> Обновить</button>
+          </div>
+        </header>
+
+        <div class="activity-stats-grid" id="activityStatsGrid">
+          <section class="card activity-stat-card"><div class="activity-stat-icon"><span class="ico" style="--ico-src:url('icons/play.svg')" aria-hidden="true"></span></div><div><div class="activity-stat-label">Всего запусков</div><strong id="activityTotalLaunches">—</strong></div></section>
+          <section class="card activity-stat-card"><div class="activity-stat-icon"><span class="ico" style="--ico-src:url('icons/coffee.svg')" aria-hidden="true"></span></div><div><div class="activity-stat-label">Всего наиграно</div><strong id="activityTotalPlaytime">—</strong></div></section>
+          <section class="card activity-stat-card"><div class="activity-stat-icon"><span class="ico" style="--ico-src:url('icons/updatelog.svg')" aria-hidden="true"></span></div><div><div class="activity-stat-label">Запусков за 7 дней</div><strong id="activityWeeklyLaunches">—</strong></div></section>
+          <section class="card activity-stat-card"><div class="activity-stat-icon"><span class="ico" style="--ico-src:url('icons/clock.svg')" aria-hidden="true"></span></div><div><div class="activity-stat-label">Средняя сессия</div><strong id="activityAverageSession">—</strong></div></section>
+        </div>
+
+        <section class="card activity-chart-card">
+          <div class="card-head">
+            <div><h2>Активность за неделю</h2><span class="card-note">Игровое время по дням · последние 7 дней</span></div>
+            <div class="activity-chart-legend"><i></i> Время в игре</div>
+          </div>
+          <div class="activity-chart" id="activityChart" aria-label="График игрового времени за последние семь дней"></div>
+        </section>
+
+        <div class="activity-two-columns">
+          <section class="card activity-list-card">
+            <div class="card-head"><div><h2>Сборки</h2><span class="card-note">По общему игровому времени</span></div></div>
+            <div id="activityBuildList" class="activity-ranked-list"></div>
+          </section>
+          <section class="card activity-list-card">
+            <div class="card-head"><div><h2>Самые используемые моды</h2><span class="card-note">Количество игровых сессий с модом</span></div></div>
+            <div id="activityTopMods" class="activity-ranked-list"></div>
+          </section>
+        </div>
+
+        <section class="card activity-history-card">
+          <div class="card-head"><div><h2>История запусков</h2><span class="card-note">Последние игровые сессии</span></div><span id="activityHistoryCount" class="current-target-badge"></span></div>
+          <div id="activityLaunchHistory" class="activity-history-list"></div>
+        </section>
+        <div class="activity-footnote">История отдельных сессий и статистика модов собираются с момента установки этой версии FCore. Общее время игры и число запусков учитывают уже накопленную статистику.</div>
+      </div>
+    </section>
+
+    <section id="tab-changelog" class="tab">
+      <div class="page">
+        <header class="page-head">
+          <div>
+            <h1>История обновлений</h1>
+            <div id="changelogCount" class="current-target-badge"></div>
+          </div>
+        </header>
+        <section class="card">
+          <div class="list-toolbar">
+            <label class="search-field"><span class="ico search-ico" style="--ico-src:url('icons/search.svg')" aria-hidden="true"></span><input id="changelogSearch" placeholder="Поиск по изменениям..."></label>
+            <div id="changelogFilter" class="segmented" role="group" aria-label="Тип изменений">
+              <button type="button" class="active" data-kind="all">Все</button>
+              <button type="button" data-kind="added">Новое</button>
+              <button type="button" data-kind="fixed">Исправления</button>
+            </div>
+          </div>
+          <div id="changelogList" class="changelog-timeline"></div>
+        </section>
+      </div>
+    </section>
+
+    <section id="tab-screenshots" class="tab">
+      <div class="page">
+        <header class="page-head">
+          <div>
+            <h1>Скриншоты</h1>
+            <div id="screenshotsCount" class="current-target-badge"></div>
+          </div>
+          <div class="head-actions">
+            <button id="refreshScreenshotsBtn"><span class="ico" style="--ico-src:url('icons/update.svg')" aria-hidden="true"></span>Обновить</button>
+          </div>
+        </header>
+
+        <section class="card">
+          <div class="list-toolbar">
+            <label class="search-field"><span class="ico search-ico" style="--ico-src:url('icons/search.svg')" aria-hidden="true"></span><input id="screenshotsSearch" placeholder="Поиск по имени файла..."></label>
+            <select id="screenshotsInstance"><option value="">Все сборки</option></select>
+            <select id="screenshotsSort">
+              <option value="new">Сначала новые</option>
+              <option value="old">Сначала старые</option>
+            </select>
+            <button id="screenshotsFavOnly" class="toggle-chip" aria-pressed="false"><span class="mask-ico" style="--ico-src:url('icons/star.svg')"></span>Избранные</button>
+            <button id="screenshotsSelectModeBtn" type="button"><span class="ico" style="--ico-src:url('icons/check.svg')" aria-hidden="true"></span>Выбрать</button>
+            <button id="screenshotsSelectAllBtn" type="button" style="display:none"><span class="ico" style="--ico-src:url('icons/check.svg')" aria-hidden="true"></span>Выбрать все</button>
+            <button id="screenshotsDeleteSelectedBtn" type="button" class="danger" style="display:none"><span class="ico" style="--ico-src:url('icons/trash.svg')" aria-hidden="true"></span>Удалить выбранные (0)</button>
+          </div>
+          <div id="screenshotsEmpty" class="empty-state" style="display:none">Скриншотов пока нет. Нажми F2 в игре, и они появятся здесь.</div>
+          <div id="screenshotsGrid" class="shot-grid"></div>
+        </section>
+      </div>
+
+      <div id="shotViewer" class="shot-viewer" style="display:none">
+        <button id="shotViewerClose" class="shot-viewer-close" title="Закрыть">✕</button>
+        <button id="shotViewerPrev" class="shot-viewer-nav prev" title="Назад">‹</button>
+        <img id="shotViewerImg" alt="">
+        <button id="shotViewerNext" class="shot-viewer-nav next" title="Вперёд">›</button>
+        <div class="shot-zoom-controls"><button id="shotZoomOut" title="Уменьшить">−</button><span id="shotZoomValue">100%</span><button id="shotZoomIn" title="Увеличить">+</button><button id="shotZoomReset" title="Сбросить масштаб">Сбросить</button></div>
+        <div class="shot-viewer-bar">
+          <div id="shotViewerName" class="shot-viewer-name"></div>
+          <div class="shot-viewer-actions">
+            <button id="shotViewerFav"><span class="ico" style="--ico-src:url('icons/star.svg')" aria-hidden="true"></span>В избранное</button>
+            <button id="shotViewerOpen"><span class="ico" style="--ico-src:url('icons/external-link.svg')" aria-hidden="true"></span>Открыть файл</button>
+            <button id="shotViewerFolder"><span class="ico" style="--ico-src:url('icons/folder.svg')" aria-hidden="true"></span>Показать в папке</button>
+            <button id="shotViewerDelete" class="danger"><span class="ico" style="--ico-src:url('icons/trash.svg')" aria-hidden="true"></span>Удалить</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  </div>
+
+  <div id="tourOverlay" class="tour-overlay">
+    <div id="tourHighlight" class="tour-highlight"></div>
+    <div id="tourTooltip" class="tour-tooltip">
+      <div class="tour-step-counter" id="tourStepCounter"></div>
+      <div class="tour-title" id="tourTitle"></div>
+      <div class="tour-text" id="tourText"></div>
+      <div class="tour-buttons">
+        <button id="tourSkipBtn" class="tour-skip">Пропустить</button>
+        <div class="tour-buttons-right">
+          <button id="tourBackBtn">Назад</button>
+          <button id="tourNextBtn" class="primary">Далее</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="catOverlay" class="cat-overlay">
+    <div class="cat-stage">
+      <img id="catIdleImg" class="cat-visual" src="cat/idle.png">
+      <video id="catTalkVideo" class="cat-visual cat-visual-hidden" src="cat/talk.mp4" muted loop playsinline></video>
+      <div id="catMysteryBtnWrap" class="cat-mystery-wrap" style="display:none">
+        <button id="catMysteryBtn" class="cat-mystery-btn">???</button>
+      </div>
+    </div>
+    <div id="catTextbox" class="cat-textbox">
+      <div id="catSpeaker" class="cat-speaker"></div>
+      <div id="catText" class="cat-text"></div>
+      <div id="catChoices" class="cat-choices"></div>
+      <span id="catContinueHint" class="cat-continue-hint">▾</span>
+    </div>
+  </div>
+
+  <div id="confirmOverlay" class="confirm-overlay">
+    <div class="confirm-box">
+      <div id="confirmText" class="confirm-text"></div>
+      <div class="confirm-buttons">
+        <button id="confirmCancelBtn" class="secondary">Отмена</button>
+        <button id="confirmOkBtn" class="primary">ОК</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="choiceOverlay" class="confirm-overlay">
+    <div class="confirm-box">
+      <div id="choiceText" class="confirm-text"></div>
+      <div class="confirm-buttons">
+        <button id="choiceCancelBtn" class="secondary">Отмена</button>
+        <button id="choiceAltBtn" class="secondary">Только мод</button>
+        <button id="choicePrimaryBtn" class="primary">Скачать с зависимостями</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="i18n-en.js"></script>
+  <script src="i18n-changelog-en.js"></script>
+  <script src="i18n.js"></script>
+  <script src="vendor/skinview3d.bundle.js"></script>
+  <script src="renderer.js"></script>
+  <script src="diagnostics.js"></script>
+  <script src="../src/gradientConfig.js"></script>
+  <script src="gradient.js"></script>
+  <script src="../src/appearanceConfig.js"></script>
+  <script src="appearance.js"></script>
+  <script src="home.js"></script>
+  <script src="../src/buildMeta.js"></script>
+  <script src="launchSettings.js"></script>
+  <script src="console.js"></script>
+  <script src="builds.js"></script>
+  <script src="buildTools.js"></script>
+</body>
+</html>

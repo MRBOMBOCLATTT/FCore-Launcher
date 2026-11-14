@@ -1,0 +1,274 @@
+/* ==========================================================================
+   Градиентная тема и цвет сборки.
+   Подключается ПОСЛЕ redesign.css. gradient.js выставляет на <body>:
+     data-grad="on"            — градиент включён (для общей темы или сборки)
+     .grad-t-launch / -progress / -controls / -banner — какие элементы красим
+     .grad-glow                — свечение вокруг кнопки запуска
+   и переменные --grad, --grad-anim, --grad-size, --grad-shimmer-dur.
+   Если ничего из этого нет, файл на интерфейс не влияет.
+   ========================================================================== */
+
+/* Анимируемые «ручки». Не наследуются: каждый элемент крутит свою копию,
+   поэтому перерисовывается только он, а не всё дерево. */
+@property --grad-rot { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@property --grad-hue { syntax: '<number>'; inherits: false; initial-value: 0; }
+
+@keyframes pfc-grad-flow  { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+@keyframes pfc-grad-rot   { from { --grad-rot: 0deg; } to { --grad-rot: 360deg; } }
+@keyframes pfc-grad-hue   { from { --grad-hue: 0; } to { --grad-hue: 360; } }
+@keyframes pfc-grad-pulse {
+  from { box-shadow: 0 6px 14px color-mix(in srgb, var(--accent) 20%, transparent); }
+  to   { box-shadow: 0 0 24px 2px color-mix(in srgb, var(--accent) 55%, transparent), 0 8px 34px color-mix(in srgb, var(--accent) 50%, transparent); }
+}
+/* блик проезжает за первые 70% цикла, остальное время «отдыхает» */
+@keyframes pfc-grad-sweep { 0% { background-position: 0% 0; } 70%, 100% { background-position: 100% 0; } }
+
+/* Тройной [data-grad] — осознанный приём: поднимает специфичность выше
+   существующих правил вида `body .page button.primary:hover:not(:disabled)`,
+   чтобы градиент не «мигал» сплошным цветом при наведении. */
+body[data-grad="on"][data-grad="on"][data-grad="on"] {
+
+  /* ---------- заливка ---------- */
+  &.grad-t-launch .launch,
+  &.grad-t-progress .meter i,
+  &.grad-t-controls .loader-btn.active,
+  &.grad-t-controls .page button.primary,
+  &.grad-t-controls .page button.primary:hover:not(:disabled),
+  &.grad-t-controls .page .segmented button.active,
+  &.grad-t-controls :is(#tab-mods, #tab-resourcepacks, #tab-shaders) .mod-toggle.on,
+  &.grad-t-controls :is(#tab-mods, #tab-resourcepacks, #tab-shaders) .mod-card .update-one-btn,
+  &.grad-t-controls :is(#tab-mods, #tab-resourcepacks, #tab-shaders) .mod-card .update-one-btn:hover:not(:disabled) {
+    background: var(--grad) 0% 50% / var(--grad-size);
+    animation: var(--grad-anim);
+  }
+
+  /* нативные <progress>: красим «значение», у них своя псевдо-иерархия */
+  &.grad-t-progress progress {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: calc(4px * var(--r-scale, 1));
+    overflow: hidden;
+    background: color-mix(in srgb, var(--text) 12%, transparent);
+  }
+  &.grad-t-progress progress::-webkit-progress-bar { background: color-mix(in srgb, var(--text) 12%, transparent); }
+  &.grad-t-progress progress::-webkit-progress-value { background: var(--grad) 0% 50% / var(--grad-size); border-radius: calc(4px * var(--r-scale, 1)); }
+
+  /* ---------- свечение вокруг кнопки запуска ---------- */
+  &.grad-glow.grad-t-launch .launch {
+    box-shadow: 0 8px 30px color-mix(in srgb, var(--accent) 48%, transparent);
+  }
+
+  /* ---------- баннер: если своего фона нет, заливаем градиентом ---------- */
+  &.grad-t-banner .home-banner:not(.has-custom-bg) .home-banner-bg {
+    opacity: .94;
+    background: var(--grad) 0% 50% / var(--grad-size);
+    animation: var(--grad-anim);
+  }
+  &.grad-t-banner .home-banner:not(.has-custom-bg) .home-banner-shade { opacity: 1; }
+  &.grad-t-banner .home-banner:not(.has-custom-bg) h1 { color: #fff; }
+  &.grad-t-banner .home-banner:not(.has-custom-bg) p { color: rgba(255, 255, 255, .88); }
+}
+
+/* ==========================================================================
+   Фон лаунчера (цель `background`).
+   Градиент рисуется на фиксированном слое body::before (redesign.css его выключает
+   через display:none, поэтому включаем обратно только когда фон реально нужен),
+   поверх него — «вуаль» из цвета фона темы: чем меньше
+   «Яркость фона», тем гуще вуаль (--grad-bg-veil задаёт gradient.js).
+   Сайдбар и карточки делаем слегка прозрачными, иначе за ними фон не виден —
+   он просвечивал бы только узкими щелями между карточками.
+   Окна поверх (поиск, подтверждения, тур) лежат вне .app-body и остаются сплошными.
+   ========================================================================== */
+@keyframes pfc-grad-bg-pulse { from { opacity: .5; } to { opacity: 1; } }
+
+body[data-grad="on"][data-grad="on"][data-grad="on"].grad-t-background {
+  /* копии настоящих цветов темы: ниже --bg-2/--panel/--panel-2 переопределяются на
+     потомках, а ссылаться в custom property на самого себя нельзя (получится цикл) */
+  --surface-bg-2: var(--bg-2);
+  --surface-panel: var(--panel);
+  --surface-panel-2: var(--panel-2);
+
+  /* Слой не перерисовывается: градиент рисуется один раз, а двигают его transform/filter
+     (идут на GPU, без paint на каждый кадр). Поэтому слой шире экрана (перелив)
+     или квадратный и большой (вращение), а не анимированный background-position. */
+  &::before {
+    display: block;
+    background:
+      linear-gradient(color-mix(in srgb, var(--bg) var(--grad-bg-veil, 55%), transparent),
+                      color-mix(in srgb, var(--bg) var(--grad-bg-veil, 55%), transparent)),
+      var(--grad);
+    will-change: transform, filter, opacity;
+    backface-visibility: hidden;
+  }
+
+  &[data-grad-anim="flow"]::before {
+    inset: 0 auto 0 0;
+    width: 300%;
+    animation: pfc-bg-flow var(--grad-dur, 36s) ease-in-out infinite alternate;
+  }
+  &[data-grad-anim="rotate"]::before {
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: 145vmax;
+    height: 145vmax;
+    margin: -72.5vmax 0 0 -72.5vmax;
+    animation: pfc-bg-rotate var(--grad-dur, 36s) linear infinite;
+  }
+  &[data-grad-anim="spectrum"]::before {
+    animation: pfc-bg-hue calc(var(--grad-dur, 36s) * 1.5) linear infinite;
+  }
+  &[data-grad-anim="pulse"]::before {
+    animation: pfc-grad-bg-pulse var(--grad-dur, 2s) ease-in-out infinite alternate;
+  }
+
+  /* карточки (--panel) прозрачнее, чем плитки внутри них (--panel-2): иначе плитки
+     сливаются с карточкой и теряют границы */
+  & :is(.sidebar, main > .tab) {
+    --bg-2: color-mix(in srgb, var(--surface-bg-2) 66%, transparent);
+    --panel: color-mix(in srgb, var(--surface-panel) 68%, transparent);
+    --panel-2: color-mix(in srgb, var(--surface-panel-2) 92%, transparent);
+  }
+
+  /* плашка с кнопками окна справа сверху иначе остаётся сплошным тёмным пятном.
+     Без blur: размытие того, что лежит под анимированным слоем, считалось бы каждый кадр */
+  & .titlebar-controls {
+    background: color-mix(in srgb, var(--bg) 55%, transparent);
+    backdrop-filter: none;
+  }
+  & :is(.play-hero select, .loader-btn) { backdrop-filter: none; }
+}
+
+@keyframes pfc-bg-flow   { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-66.6667%, 0, 0); } }
+@keyframes pfc-bg-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes pfc-bg-hue    { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+
+/* окно свёрнуто — анимации стоят, иначе лаунчер греет процессор в трее */
+body.anim-paused,
+body.anim-paused *,
+body.anim-paused *::before,
+body.anim-paused *::after { animation-play-state: paused !important; }
+
+/* ---------- блик (анимация «Блик») ---------- */
+body[data-grad="on"][data-grad-anim="shimmer"].grad-t-launch .launch,
+body[data-grad="on"][data-grad-anim="shimmer"].grad-t-progress .meter i { position: relative; }
+
+body[data-grad="on"][data-grad-anim="shimmer"].grad-t-launch .launch::after,
+body[data-grad="on"][data-grad-anim="shimmer"].grad-t-progress .meter i::after,
+.pfc-gprev[data-anim="shimmer"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 0 40%, rgba(255, 255, 255, .42) 50%, transparent 60% 100%) 0% 0 / 300% 100% no-repeat;
+  animation: pfc-grad-sweep var(--grad-shimmer-dur, 3s) ease-in-out infinite;
+}
+
+/* плашка «Градиент» среди обычных цветов */
+body .page .theme-swatch[data-theme="gradient"],
+body .page .theme-swatch[data-theme="gradient"]:hover:not(:disabled) {
+  background: var(--grad-preview, linear-gradient(135deg, #474ed8, #8a4bff, #ff4bd8));
+}
+
+/* плитки «Недавние сборки»: цветная полоска у сборок со своим цветом */
+body .rb[data-accent] { position: relative; }
+body .rb[data-accent]::before {
+  content: '';
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  top: 0;
+  height: 3px;
+  border-radius: 0 0 calc(3px * var(--r-scale, 1)) calc(3px * var(--r-scale, 1));
+  background: var(--rb-accent);
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   Редактор (настройки → «Внешний вид»)
+   ========================================================================== */
+.pfc-gprev {
+  position: relative;
+  height: 64px;
+  border-radius: calc(14px * var(--r-scale, 1));
+  background: var(--grad) 0% 50% / var(--grad-size);
+  animation: var(--grad-anim);
+  border: 1px solid color-mix(in srgb, var(--text) 14%, transparent);
+}
+.pfc-gprev-label {
+  position: absolute;
+  left: 16px;
+  bottom: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .2px;
+  color: var(--prev-text, #fff);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, .35);
+  pointer-events: none;
+}
+
+.gedit { display: flex; flex-direction: column; gap: 14px; padding: 4px 0 2px; }
+.gedit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.gedit-label { flex: 0 0 104px; font-size: 13px; font-weight: 600; color: var(--text-dim); }
+.gedit-hint { margin: -6px 0 0; font-size: 12px; color: var(--text-faint); }
+
+.gpresets { display: flex; flex-wrap: wrap; gap: 8px; }
+body .page .gpreset {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px 0 6px;
+  border-radius: calc(10px * var(--r-scale, 1));
+  font-size: 13px;
+}
+.gpreset i { display: block; width: 22px; height: 22px; border-radius: calc(7px * var(--r-scale, 1)); }
+
+.gstops { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Селектор намеренно «тяжёлый»: общее правило для input в redesign.css
+   (`body .page input:not([type=checkbox]):not([type=range])`: height 44px, padding 0 14px)
+   иначе побеждает и превращает квадрат в тонкую палочку. */
+body .page .gedit input.gstop[type="color"] {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+  border: 2px solid var(--border-hi);
+  border-radius: calc(12px * var(--r-scale, 1));
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+}
+.gstop::-webkit-color-swatch-wrapper { padding: 0; }
+.gstop::-webkit-color-swatch { border: 0; border-radius: calc(9px * var(--r-scale, 1)); }
+body .page .gstop-btn { width: 38px; height: 38px; padding: 0; border-radius: calc(12px * var(--r-scale, 1)); font-size: 18px; line-height: 1; }
+
+.gedit input[type="range"] { width: 180px; accent-color: var(--accent); }
+.gedit-val { min-width: 42px; font-size: 13px; font-variant-numeric: tabular-nums; color: var(--text-dim); }
+.gedit select { height: 36px; }
+
+.gedit-checks { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+/* `body .page` — чтобы перебить общие правила для label (колонка, серый цвет) из redesign.css */
+body .page .gcheck { display: inline-flex; flex-direction: row; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: var(--text); cursor: pointer; }
+.gcheck input { accent-color: var(--accent); }
+
+.gedit-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.gedit-share { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.gedit-share input[type="text"] { flex: 1 1 220px; min-width: 0; height: 36px; font-family: var(--mono); font-size: 12px; }
+
+/* карточка «Цвет выбранной сборки» */
+.build-accent-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.build-accent-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.build-accent-solid { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.build-accent-flash { animation: pfc-flash 1.1s ease-out 1; }
+@keyframes pfc-flash {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 70%, transparent); }
+  100% { box-shadow: 0 0 0 14px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .build-accent-flash { animation: none; }
+}
