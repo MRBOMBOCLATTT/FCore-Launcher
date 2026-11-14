@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/fcore-banner.svg" alt="FCore Launcher" width="100%">
+  <img src=".github/assets/fcore-banner.svg" alt="FCore Launcher" width="100%">
 </p>
 
 <p align="center">
